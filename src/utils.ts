@@ -1,11 +1,56 @@
-import { parseStringPromise } from 'xml2js';
+import { XMLParser } from 'fast-xml-parser';
 import { GmlVersion } from './types.js';
 
+const xmlParser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '',
+    attributesGroupName: '$',
+    textNodeName: '_',
+    trimValues: false,
+    allowBooleanAttributes: true,
+    parseAttributeValue: false,
+    parseTagValue: false,
+    removeNSPrefix: false,
+});
+
 export async function parseXml(xml: string): Promise<any> {
-    return parseStringPromise(xml, {
-        explicitArray: false,
-        ignoreAttrs: false,
-        charkey: '_',
+    const parsed = xmlParser.parse(xml);
+    if (!parsed || typeof parsed !== 'object') {
+        throw new Error('Invalid XML: parsing failed');
+    }
+
+    annotateLocalNames(parsed);
+    return parsed;
+}
+
+function annotateLocalNames(node: any, key?: string): void {
+    if (Array.isArray(node)) {
+        for (const item of node) {
+            annotateLocalNames(item, key);
+        }
+        return;
+    }
+
+    if (!node || typeof node !== 'object') return;
+
+    if (key) {
+        defineLocalName(node, key);
+    }
+
+    for (const [childKey, childValue] of Object.entries(node)) {
+        if (childKey === '$' || childKey === '_' || childKey === '#name') continue;
+        annotateLocalNames(childValue, childKey);
+    }
+}
+
+function defineLocalName(target: Record<string, any>, qualifiedName: string): void {
+    const parts = qualifiedName.split(':');
+    const localName = parts[parts.length - 1];
+    Object.defineProperty(target, '#name', {
+        value: localName,
+        enumerable: false,
+        writable: true,
+        configurable: true,
     });
 }
 
