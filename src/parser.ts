@@ -71,6 +71,11 @@ export class GmlParser {
     }
 
     private parseGml(doc: any, version: GmlVersion): GmlGeometry | GmlFeature | GmlFeatureCollection {
+        const collectionNode = this.findFeatureCollectionNode(doc);
+        if (collectionNode) {
+            return this.parseFeatureCollection(collectionNode, version);
+        }
+
         const entry = this.findFirstGmlEntry(doc);
         if (!entry) throw new Error('No GML geometry found');
         return this.parseElement(entry.key, entry.value, version);
@@ -498,6 +503,33 @@ export class GmlParser {
                 }
             } else if (typeof value === 'object') {
                 const result = this.findFirstGmlEntry(value);
+                if (result) return result;
+            }
+        }
+
+        return undefined;
+    }
+
+    private findFeatureCollectionNode(node: any): any | undefined {
+        if (!node || typeof node !== 'object') return undefined;
+
+        for (const [key, value] of Object.entries(node)) {
+            if (key === '$' || key === '_') continue;
+            if (key.endsWith('FeatureCollection')) {
+                return this.normalizeElement(value);
+            }
+        }
+
+        for (const [key, value] of Object.entries(node)) {
+            if (key === '$' || key === '_') continue;
+            if (!value) continue;
+            if (Array.isArray(value)) {
+                for (const item of value) {
+                    const result = this.findFeatureCollectionNode(item);
+                    if (result) return result;
+                }
+            } else if (typeof value === 'object') {
+                const result = this.findFeatureCollectionNode(value);
                 if (result) return result;
             }
         }
