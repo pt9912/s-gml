@@ -21,7 +21,15 @@ async function fetchInput(input: string): Promise<string> {
         }
         return await response.text();
     }
-    return readFileSync(input, 'utf-8');
+
+    try {
+        return readFileSync(input, 'utf-8');
+    } catch (error: any) {
+        if (error.code === 'ENOENT') {
+            throw new Error(`File not found: ${input}`);
+        }
+        throw error;
+    }
 }
 
 export function buildProgram(): Command {
