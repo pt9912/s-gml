@@ -112,18 +112,24 @@ export type Geometry = GeoJsonGeometry;
 export type Feature = GeoJsonFeature<Geometry>;
 export type FeatureCollection = GeoJsonFeatureCollection<Geometry>;
 
-export interface Builder {
-    buildPoint(gml: GmlPoint): Geometry;
-    buildLineString(gml: GmlLineString): Geometry;
-    buildPolygon(gml: GmlPolygon): Geometry;
-    buildMultiPoint(gml: GmlMultiPoint): Geometry;
-    buildMultiLineString(gml: GmlMultiLineString): Geometry;
-    buildMultiPolygon(gml: GmlMultiPolygon): Geometry;
-    buildLinearRing(gml: GmlLinearRing): Geometry;
-    buildEnvelope(gml: GmlEnvelope): Feature;
-    buildBox(gml: GmlBox): Feature;
-    buildCurve(gml: GmlCurve): Geometry;
-    buildSurface(gml: GmlSurface): Geometry;
+export interface Builder<
+    TGeometry = Geometry,
+    TFeature = Feature,
+    TFeatureCollection = FeatureCollection
+> {
+    buildPoint(gml: GmlPoint): TGeometry;
+    buildLineString(gml: GmlLineString): TGeometry;
+    buildPolygon(gml: GmlPolygon): TGeometry;
+    buildMultiPoint(gml: GmlMultiPoint): TGeometry;
+    buildMultiLineString(gml: GmlMultiLineString): TGeometry;
+    buildMultiPolygon(gml: GmlMultiPolygon): TGeometry;
+    buildLinearRing(gml: GmlLinearRing): TGeometry;
+    buildEnvelope(gml: GmlEnvelope): TFeature;
+    buildBox(gml: GmlBox): TFeature;
+    buildCurve(gml: GmlCurve): TGeometry;
+    buildSurface(gml: GmlSurface): TGeometry;
+    buildFeature(gml: GmlFeature): TFeature;
+    buildFeatureCollection(gml: GmlFeatureCollection): TFeatureCollection;
 }
 
 export interface GmlConvertOptions {

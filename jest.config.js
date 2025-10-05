@@ -8,7 +8,8 @@ export default {
         }]
     },
     moduleNameMapper: {
-        '^(\\.{1,2}/.*)\\.js$': '$1'
+        '^(\\.{1,2}/.*)\\.js$': '$1',
+        '^xsd-validator$': '<rootDir>/test/__mocks__/xsd-validator.ts'
     },
     testMatch: ['**/test/**/*.test.ts'],
     collectCoverageFrom: ['src/**/*.ts']

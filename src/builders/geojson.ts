@@ -1,4 +1,4 @@
-import { Builder, GmlPoint, GmlLineString, GmlPolygon, GmlLinearRing, GmlEnvelope, GmlBox, GmlCurve, GmlSurface, GmlMultiPoint, GmlMultiLineString, GmlMultiPolygon, Geometry, Feature } from '../types.js';
+import { Builder, GmlPoint, GmlLineString, GmlPolygon, GmlLinearRing, GmlEnvelope, GmlBox, GmlCurve, GmlSurface, GmlMultiPoint, GmlMultiLineString, GmlMultiPolygon, Geometry, Feature, FeatureCollection, GmlFeature, GmlFeatureCollection, GmlGeometry } from '../types.js';
 
 export class GeoJsonBuilder implements Builder {
     buildPoint(gml: GmlPoint): Geometry {
@@ -76,4 +76,59 @@ export class GeoJsonBuilder implements Builder {
         };
     }
 
+    buildFeature(gml: GmlFeature): Feature {
+        const geometryResult = this.buildGeometry(gml.geometry);
+
+        let geometry: Geometry;
+        let properties = { ...gml.properties };
+
+        if ((geometryResult as Feature).type === 'Feature') {
+            const featureGeometry = geometryResult as Feature;
+            geometry = featureGeometry.geometry as Geometry;
+            properties = { ...featureGeometry.properties, ...properties };
+        } else {
+            geometry = geometryResult as Geometry;
+        }
+
+        const feature: Feature = {
+            type: 'Feature',
+            geometry,
+            properties,
+        };
+
+        if (gml.id) {
+            feature.id = gml.id;
+        }
+
+        if (gml.boundedBy) {
+            feature.bbox = gml.boundedBy.bbox;
+        }
+
+        return feature;
+    }
+
+    buildFeatureCollection(gml: GmlFeatureCollection): FeatureCollection {
+        return {
+            type: 'FeatureCollection',
+            features: gml.features.map(feature => this.buildFeature(feature)),
+        };
+    }
+
+    private buildGeometry(gml: GmlGeometry): Geometry | Feature {
+        switch (gml.type) {
+            case 'Point': return this.buildPoint(gml);
+            case 'LineString': return this.buildLineString(gml);
+            case 'Polygon': return this.buildPolygon(gml);
+            case 'LinearRing': return this.buildLinearRing(gml);
+            case 'Envelope': return this.buildEnvelope(gml);
+            case 'Box': return this.buildBox(gml);
+            case 'Curve': return this.buildCurve(gml);
+            case 'Surface': return this.buildSurface(gml);
+            case 'MultiPoint': return this.buildMultiPoint(gml);
+            case 'MultiLineString': return this.buildMultiLineString(gml);
+            case 'MultiPolygon': return this.buildMultiPolygon(gml);
+            default:
+                throw new Error(`Unsupported geometry type: ${(gml as any).type}`);
+        }
+    }
 }
