@@ -81,6 +81,8 @@ export class GmlParser {
         const name = this.getLocalName(key, element);
 
         switch (name) {
+            case 'featureMember':
+                return this.parseFeatureMember(element, version);
             case 'Point':
                 return this.parsePoint(element, version);
             case 'LineString':
