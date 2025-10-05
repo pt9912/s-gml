@@ -1,6 +1,6 @@
-# s-gml
+# @npm9912/s-gml
 
-[![npm version](https://badge.fury.io/js/s-gml.svg)](https://www.npmjs.com/package/s-gml)
+[![npm version](https://badge.fury.io/js/%40npm9912%2Fs-gml.svg)](https://www.npmjs.com/package/@npm9912/s-gml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%23007ACC.svg)](https://www.typescriptlang.org/)
 
@@ -23,7 +23,7 @@ inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-Unterstützung und Dock
 ## 📦 Installation
 
 ```bash
-pnpm install s-gml
+pnpm install @npm9912/s-gml
 ```
 
 ---
@@ -31,7 +31,7 @@ pnpm install s-gml
 
 ### GML → GeoJSON parsen
 ```typescript
-import { GmlParser } from 's-gml';
+import { GmlParser } from '@npm9912/s-gml';
 
 const parser = new GmlParser();
 const geojson = await parser.parse(`
