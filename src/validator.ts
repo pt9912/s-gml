@@ -28,7 +28,18 @@ export async function validateGml(xml: string, version: string): Promise<boolean
         });
     } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
-        throw new Error(`XSD-Validierung fehlgeschlagen: ${detail}`);
+
+        // Check if it's a schema loading issue
+        if (detail.includes('failed to load external entity') ||
+            detail.includes('Failed to load the document')) {
+            throw new Error(
+                `XSD validation failed: Cannot resolve schema references.\n` +
+                `This often happens with WFS responses that contain relative schema imports.\n` +
+                `Tip: Parse the GML instead of validating, or download and validate locally.`
+            );
+        }
+
+        throw new Error(`XSD validation failed: ${detail}`);
     }
 
     return result.valid;
