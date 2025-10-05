@@ -15,6 +15,7 @@ inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-Unterstützung und Dock
 | **GML → GeoJSON**          | Parsen aller GML-Elemente nach GeoJSON              |
 | **Versionen konvertieren** | GML 2.1.2 ↔ 3.2 (inkl. FeatureCollections)          |
 | **WFS-Unterstützung**      | Parsen von WFS-FeatureCollections                   |
+| **OWS Exception Handling** | Automatische Erkennung und Behandlung von WFS-Fehlern |
 | **XSD-Validierung**        | Prüfung gegen offizielle GML-Schemata               |
 | **Neue GML-Elemente**      | `Envelope`, `Box`, `Curve`, `Surface`, `LinearRing` |
 | **Docker-CLI**             | Bereit als Container-Image für Batch-Verarbeitung   |
@@ -89,6 +90,29 @@ console.log(surface.type);
 // "MultiPolygon"
 ```
 
+### OWS Exception Reports behandeln
+```typescript
+import { GmlParser, OwsExceptionError } from '@npm9912/s-gml';
+
+const parser = new GmlParser();
+
+try {
+  const geojson = await parser.parse(wfsResponse);
+  console.log(geojson);
+} catch (error) {
+  if (error instanceof OwsExceptionError) {
+    console.error('WFS Error:', error.message);
+    // OWS Exception [InvalidParameterValue]: Failed to find response for output format GML23
+
+    console.error('All errors:', error.getAllMessages());
+    // Zeigt alle Exceptions mit Details an
+
+    console.log('Exception Report:', error.report);
+    // Zugriff auf das vollständige Report-Objekt
+  }
+}
+```
+
 ---
 ## 📖 Unterstützte GML-Elemente
 
@@ -153,6 +177,21 @@ docker run --rm -v \$(pwd):/data s-gml-cli validate /data/input.gml --version 3.
 
 ### `validateGml(gml: string, version: string)`
 → `Promise<boolean>`
+
+### OWS Exception Handling
+
+**`OwsExceptionError`** - Wird geworfen, wenn ein WFS-Server einen Exception Report zurückgibt:
+
+```typescript
+class OwsExceptionError extends Error {
+  report: OwsExceptionReport;  // Vollständiger Report
+  getAllMessages(): string;     // Alle Fehlermeldungen formatiert
+}
+```
+
+**Hilfsfunktionen**:
+- `isOwsExceptionReport(xml: string): boolean` - Prüft, ob XML ein Exception Report ist
+- `parseOwsExceptionReport(xml: string): OwsExceptionReport` - Parst Exception Report manuell
 
 ---
 ## 🛠 Entwicklung

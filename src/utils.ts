@@ -1,5 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
 import { GmlVersion } from './types.js';
+import { isOwsExceptionReport, throwOwsException } from './ows-exception.js';
 
 const xmlParser = new XMLParser({
     ignoreAttributes: false,
@@ -14,6 +15,11 @@ const xmlParser = new XMLParser({
 });
 
 export async function parseXml(xml: string): Promise<any> {
+    // Check if this is an OWS Exception Report before parsing
+    if (isOwsExceptionReport(xml)) {
+        throwOwsException(xml);
+    }
+
     const parsed = xmlParser.parse(xml);
     if (!parsed || typeof parsed !== 'object') {
         throw new Error('Invalid XML: parsing failed');

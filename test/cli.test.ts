@@ -18,6 +18,13 @@ const samplePoint = `
   <gml:pos>10 20</gml:pos>
 </gml:Point>`;
 
+const owsExceptionReport = `<?xml version="1.0" encoding="UTF-8"?>
+<ows:ExceptionReport xmlns:ows="http://www.opengis.net/ows" version="1.0.0">
+  <ows:Exception exceptionCode="InvalidParameterValue" locator="outputFormat">
+    <ows:ExceptionText>Failed to find response for output format GML23</ows:ExceptionText>
+  </ows:Exception>
+</ows:ExceptionReport>`;
+
 beforeEach(() => {
     jest.clearAllMocks();
 });
@@ -104,6 +111,41 @@ describe('CLI', () => {
 
         expect(converted).toContain('<gml:Point');
         expect(converted).toContain('xmlns:gml="http://www.opengis.net/gml"');
+    });
+
+    it('handles OWS Exception Report directly in parser', async () => {
+        const { GmlParser, OwsExceptionError } = await import('../src/index.js');
+        const parser = new GmlParser();
+
+        await expect(parser.parse(owsExceptionReport)).rejects.toThrow(OwsExceptionError);
+
+        try {
+            await parser.parse(owsExceptionReport);
+            fail('Should have thrown');
+        } catch (error) {
+            expect(error).toBeInstanceOf(OwsExceptionError);
+            const owsError = error as InstanceType<typeof OwsExceptionError>;
+            expect(owsError.message).toContain('InvalidParameterValue');
+            expect(owsError.getAllMessages()).toContain('Failed to find response for output format GML23');
+        }
+    });
+
+    it('handles OWS Exception Report in convert', async () => {
+        const { GmlParser, OwsExceptionError } = await import('../src/index.js');
+        const parser = new GmlParser();
+
+        await expect(
+            parser.convert(owsExceptionReport, { outputVersion: '3.2' })
+        ).rejects.toThrow(OwsExceptionError);
+
+        try {
+            await parser.convert(owsExceptionReport, { outputVersion: '3.2' });
+            fail('Should have thrown');
+        } catch (error) {
+            expect(error).toBeInstanceOf(OwsExceptionError);
+            const owsError = error as InstanceType<typeof OwsExceptionError>;
+            expect(owsError.message).toContain('InvalidParameterValue');
+        }
     });
 
 });
