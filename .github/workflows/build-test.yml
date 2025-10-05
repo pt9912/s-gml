@@ -22,6 +22,7 @@ jobs:
         uses: pnpm/action-setup@v2
         with:
           version: latest
+          standalone: true
           run_install: false
 
       - name: Install dependencies
