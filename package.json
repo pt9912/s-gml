@@ -5,6 +5,9 @@
     "type": "module",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
+    "bin": {
+        "s-gml": "./dist/cli.js"
+    },
     "exports": {
         ".": {
             "import": "./dist/index.js",
@@ -15,10 +18,11 @@
         "dist"
     ],
     "scripts": {
-        "build": "pnpm run build:esm && pnpm run build:cjs && pnpm run build:types",
+        "build": "pnpm run build:esm && pnpm run build:cjs && pnpm run build:types && pnpm run build:cli",
         "build:esm": "rollup -c rollup.esm.js",
         "build:cjs": "rollup -c rollup.cjs.js",
         "build:types": "tsc --emitDeclarationOnly",
+        "build:cli": "rollup -c rollup.cli.js",
         "test": "jest",
         "test:coverage": "jest --coverage",
         "lint": "eslint . --ext .ts",
