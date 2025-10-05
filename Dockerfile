@@ -3,6 +3,9 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+# native build tooling for libxmljs
+RUN apk add --no-cache python3 make g++
+
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
@@ -19,6 +22,7 @@ RUN pnpm run build
 RUN pnpm test
 RUN pnpm run test:coverage
 RUN pnpm run lint
+RUN pnpm rebuild libxmljs
 RUN pnpm prune --prod
 
 # Runtime-Stage: Nur Node 22 (kein pnpm nötig)
