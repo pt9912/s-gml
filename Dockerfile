@@ -10,12 +10,14 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 #COPY package.json pnpm-lock.yaml ./
 #RUN pnpm install --frozen-lockfile
 COPY package.json ./
-RUN pnpm install
+RUN pnpm install --prod=false
 
 
 # Kopiere Quellcode und baue
 COPY . .
 RUN pnpm run build
+RUN pnpm test
+RUN pnpm run lint
 
 # Runtime-Stage: Nur Node 22 (kein pnpm nötig)
 FROM node:22-alpine
