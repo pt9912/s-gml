@@ -132,4 +132,77 @@ describe('GmlParser.parse', () => {
             ],
         });
     });
+
+    it('parses GML Curve with segments', async () => {
+        const parser = new GmlParser();
+        const gml = `
+            <gml:Curve xmlns:gml="http://www.opengis.net/gml/3.2">
+                <gml:segments>
+                    <gml:LineStringSegment>
+                        <gml:posList>10 20 15 25 20 30</gml:posList>
+                    </gml:LineStringSegment>
+                </gml:segments>
+            </gml:Curve>
+        `;
+
+        const result = await parser.parse(gml);
+
+        expect(result).toEqual({
+            type: 'LineString',
+            coordinates: [
+                [10, 20],
+                [15, 25],
+                [20, 30],
+            ],
+        });
+    });
+
+    it('parses GML MultiPoint 2.1.2 coordinates', async () => {
+        const parser = new GmlParser();
+        const gml = `
+            <gml:MultiPoint xmlns:gml="http://www.opengis.net/gml" srsName="EPSG:4326">
+                <gml:coordinates>10,20 30,40</gml:coordinates>
+            </gml:MultiPoint>
+        `;
+
+        const result = await parser.parse(gml);
+
+        expect(result).toEqual({
+            type: 'MultiPoint',
+            coordinates: [
+                [10, 20],
+                [30, 40],
+            ],
+        });
+    });
+
+    it('parses FeatureCollection with boundedBy envelope', async () => {
+        const parser = new GmlParser();
+        const gml = `
+            <gml:FeatureCollection xmlns:gml="http://www.opengis.net/gml/3.2">
+                <gml:boundedBy>
+                    <gml:Envelope srsName="EPSG:4326">
+                        <gml:lowerCorner>0 0</gml:lowerCorner>
+                        <gml:upperCorner>10 10</gml:upperCorner>
+                    </gml:Envelope>
+                </gml:boundedBy>
+                <gml:featureMember>
+                    <my:PointFeature xmlns:my="https://example.com/my" gml:id="p1">
+                        <my:name>Test</my:name>
+                        <gml:Point srsName="EPSG:4326">
+                            <gml:pos>5 6</gml:pos>
+                        </gml:Point>
+                    </my:PointFeature>
+                </gml:featureMember>
+            </gml:FeatureCollection>
+        `;
+
+        const result = await parser.parse(gml);
+        const collection = result as any;
+
+        expect(collection.type).toBe('FeatureCollection');
+        expect(collection.features).toHaveLength(1);
+        expect(collection.bbox).toEqual([0, 0, 10, 10]);
+        expect(collection.features[0].properties).toHaveProperty('my:name', 'Test');
+    });
 });

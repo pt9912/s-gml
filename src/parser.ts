@@ -411,10 +411,14 @@ export class GmlParser {
 
     private toGeoJson(gmlObject: GmlGeometry | GmlFeature | GmlFeatureCollection): Geometry | Feature | FeatureCollection {
         if (this.isFeatureCollection(gmlObject)) {
-            return {
+            const featureCollection: FeatureCollection = {
                 type: 'FeatureCollection',
                 features: gmlObject.features.map(feature => this.toGeoJsonFeature(feature)),
             };
+            if (gmlObject.bounds) {
+                featureCollection.bbox = gmlObject.bounds.bbox;
+            }
+            return featureCollection;
         }
 
         if (this.isFeature(gmlObject)) {
@@ -558,6 +562,13 @@ export class GmlParser {
             return null;
         }
         if (typeof node !== 'object') return null;
+
+        if (featurePropertyKey && featurePropertyKey.startsWith('gml:')) {
+            const name = this.getLocalName(featurePropertyKey, node);
+            if (GEOMETRY_ELEMENT_NAMES.has(name)) {
+                return { key: featurePropertyKey, value: node, featurePropertyKey };
+            }
+        }
 
         for (const [key, value] of Object.entries(node)) {
             if (key.startsWith('gml:')) {
