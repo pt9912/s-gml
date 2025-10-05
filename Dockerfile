@@ -19,6 +19,7 @@ RUN pnpm run build
 RUN pnpm test
 RUN pnpm run test:coverage
 RUN pnpm run lint
+RUN pnpm prune --prod
 
 # Runtime-Stage: Nur Node 22 (kein pnpm nötig)
 FROM node:22-alpine
@@ -28,6 +29,8 @@ WORKDIR /app
 # Kopiere nur notwendige Dateien
 COPY --from=builder /app/dist ./dist/
 COPY --from=builder /app/package.json ./
+COPY --from=builder /app/pnpm-lock.yaml ./
+COPY --from=builder /app/node_modules ./node_modules
 COPY entrypoint.sh .
 
 # ESM-Unterstützung
