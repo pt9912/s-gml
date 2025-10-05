@@ -77,6 +77,12 @@ function generateFeature(
     xml.push(0, '<gml:featureMember>');
     xml.push(1, `<gml:Feature${idAttr} ${namespace}>`);
 
+    if (feature.boundedBy) {
+        xml.push(2, '<gml:boundedBy>');
+        appendXml(xml, generateEnvelope(feature.boundedBy, version, prettyPrint), 3);
+        xml.push(2, '</gml:boundedBy>');
+    }
+
     for (const [key, value] of Object.entries(feature.properties ?? {})) {
         xml.push(2, `<${key}>${serializePropertyValue(value)}</${key}>`);
     }
@@ -99,6 +105,13 @@ function generateFeatureCollection(
     const namespace = getNamespace(version);
 
     xml.push(0, `<gml:FeatureCollection ${namespace}>`);
+
+    if (featureCollection.bounds) {
+        xml.push(1, '<gml:boundedBy>');
+        appendXml(xml, generateEnvelope(featureCollection.bounds, version, prettyPrint), 2);
+        xml.push(1, '</gml:boundedBy>');
+    }
+
     for (const feature of featureCollection.features) {
         appendXml(xml, generateFeature(feature, version, prettyPrint), 1);
     }

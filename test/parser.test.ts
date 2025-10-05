@@ -46,4 +46,34 @@ describe('GmlParser.parse', () => {
             },
         });
     });
+
+    it('parses WFS FeatureCollection with nested feature geometry', async () => {
+        const parser = new GmlParser();
+        const gml = `
+            <wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:my="https://example.com/my">
+                <gml:featureMember>
+                    <my:Building gml:id="b1">
+                        <my:name>Rathaus</my:name>
+                        <gml:location>
+                            <gml:Point srsName="EPSG:4326">
+                                <gml:pos>10 20</gml:pos>
+                            </gml:Point>
+                        </gml:location>
+                    </my:Building>
+                </gml:featureMember>
+            </wfs:FeatureCollection>
+        `;
+
+        const result = await parser.parse(gml);
+
+        expect(result).toMatchObject({ type: 'FeatureCollection' });
+        const collection = result as any;
+        expect(collection.features).toHaveLength(1);
+        expect(collection.features[0].id).toBe('b1');
+        expect(collection.features[0].properties).toHaveProperty('my:name', 'Rathaus');
+        expect(collection.features[0].geometry).toEqual({
+            type: 'Point',
+            coordinates: [10, 20],
+        });
+    });
 });
