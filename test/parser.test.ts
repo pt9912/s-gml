@@ -76,4 +76,60 @@ describe('GmlParser.parse', () => {
             coordinates: [10, 20],
         });
     });
+
+    it('parses MultiSurface to MultiPolygon', async () => {
+        const parser = new GmlParser();
+        const gml = `
+            <gml:MultiSurface xmlns:gml="http://www.opengis.net/gml/3.2" srsName="EPSG:4326">
+                <gml:surfaceMember>
+                    <gml:Surface>
+                        <gml:patches>
+                            <gml:PolygonPatch>
+                                <gml:exterior>
+                                    <gml:LinearRing>
+                                        <gml:posList>10 20 30 20 30 40 10 40 10 20</gml:posList>
+                                    </gml:LinearRing>
+                                </gml:exterior>
+                            </gml:PolygonPatch>
+                        </gml:patches>
+                    </gml:Surface>
+                </gml:surfaceMember>
+                <gml:surfaceMember>
+                    <gml:Polygon>
+                        <gml:exterior>
+                            <gml:LinearRing>
+                                <gml:posList>50 60 60 60 60 70 50 70 50 60</gml:posList>
+                            </gml:LinearRing>
+                        </gml:exterior>
+                    </gml:Polygon>
+                </gml:surfaceMember>
+            </gml:MultiSurface>
+        `;
+
+        const result = await parser.parse(gml);
+
+        expect(result).toEqual({
+            type: 'MultiPolygon',
+            coordinates: [
+                [
+                    [
+                        [10, 20],
+                        [30, 20],
+                        [30, 40],
+                        [10, 40],
+                        [10, 20],
+                    ],
+                ],
+                [
+                    [
+                        [50, 60],
+                        [60, 60],
+                        [60, 70],
+                        [50, 70],
+                        [50, 60],
+                    ],
+                ],
+            ],
+        });
+    });
 });

@@ -97,6 +97,8 @@ export class GmlParser {
                 return this.parseCurve(element, version);
             case 'Surface':
                 return this.parseSurface(element, version);
+            case 'MultiSurface':
+                return this.parseMultiSurface(element, version);
             case 'MultiPoint':
                 return this.parseMultiPoint(element, version);
             case 'MultiLineString':
@@ -191,11 +193,46 @@ export class GmlParser {
         return { type: 'Surface', patches, srsName: element.$?.srsName, version };
     }
 
+    private parseMultiSurface(element: any, version: GmlVersion): GmlMultiPolygon {
+        const srsName = element.$?.srsName;
+        const polygons: number[][][][] = [];
+
+        const surfaceMembers = this.ensureArray(element['gml:surfaceMember']);
+        surfaceMembers.forEach(member => {
+            const surfaceNode = this.normalizeElement(member['gml:Surface'] ?? member['gml:Polygon']);
+            if (!surfaceNode) return;
+            if (surfaceNode['#name'] === 'Polygon' || surfaceNode['gml:exterior']) {
+                polygons.push(this.parsePolygon(surfaceNode, version).coordinates);
+            } else {
+                const surface = this.parseSurface(surfaceNode, version);
+                surface.patches.forEach(patch => polygons.push(patch.coordinates));
+            }
+        });
+
+        const surfaceMembersContainer = element['gml:surfaceMembers'];
+        if (surfaceMembersContainer) {
+            const containerEntries = this.ensureArray(surfaceMembersContainer);
+            containerEntries.forEach(container => {
+                const surfaceNodes = this.ensureArray(container['gml:Surface']);
+                surfaceNodes.forEach(node => {
+                    const surface = this.parseSurface(node, version);
+                    surface.patches.forEach(patch => polygons.push(patch.coordinates));
+                });
+                const polygonNodes = this.ensureArray(container['gml:Polygon']);
+                polygonNodes.forEach(node => {
+                    polygons.push(this.parsePolygon(node, version).coordinates);
+                });
+            });
+        }
+
+        return { type: 'MultiPolygon', coordinates: polygons, srsName, version };
+    }
+
     private parseMultiPoint(element: any, version: GmlVersion): GmlMultiPoint {
         const srsName = element.$?.srsName;
-        const srsDimension = this.parseDimension(element.$?.srsDimension);
 
         if (version === '2.1.2') {
+            const srsDimension = this.parseDimension(element.$?.srsDimension);
             const source = element['gml:coordinates']?._;
             if (typeof source !== 'string') throw new Error('Invalid GML MultiPoint');
             const coordinates = this.toCoordinateTuples(parseCoordinates(source, version, srsDimension), srsDimension) as number[][];
@@ -228,9 +265,9 @@ export class GmlParser {
 
     private parseMultiLineString(element: any, version: GmlVersion): GmlMultiLineString {
         const srsName = element.$?.srsName;
-        const srsDimension = this.parseDimension(element.$?.srsDimension);
 
         if (version === '2.1.2') {
+            const srsDimension = this.parseDimension(element.$?.srsDimension);
             const source = element['gml:coordinates']?._;
             if (typeof source !== 'string') throw new Error('Invalid GML MultiLineString');
             const lines = this.toCoordinateTuples(parseCoordinates(source, version, srsDimension), srsDimension) as number[][];
@@ -261,7 +298,6 @@ export class GmlParser {
 
     private parseMultiPolygon(element: any, version: GmlVersion): GmlMultiPolygon {
         const srsName = element.$?.srsName;
-        const srsDimension = this.parseDimension(element.$?.srsDimension);
 
         const polygons: number[][][][] = [];
         const members = this.ensureArray(element['gml:polygonMember']);
@@ -492,7 +528,7 @@ export class GmlParser {
         if (featureElement.$) {
             for (const [key, value] of Object.entries(featureElement.$)) {
                 if (key !== 'gml:id') {
-                    properties[key] = value;
+                    properties[key] = this.normalizePropertyValue(value);
                 }
             }
         }
@@ -501,10 +537,33 @@ export class GmlParser {
             if (key === '$' || key === '#name') continue;
             if (geometryPropertyKey && key === geometryPropertyKey) continue;
             if (key.startsWith('gml:')) continue;
-            properties[key] = value;
+            properties[key] = this.normalizePropertyValue(value);
         }
 
         return properties;
+    }
+
+    private normalizePropertyValue(value: any): any {
+        if (value === null || value === undefined) return value;
+
+        if (Array.isArray(value)) {
+            return value.map(item => this.normalizePropertyValue(item));
+        }
+
+        if (typeof value === 'object') {
+            if (typeof value._ === 'string') {
+                return value._.trim();
+            }
+            return Object.fromEntries(
+                Object.entries(value).map(([key, val]) => [key, this.normalizePropertyValue(val)])
+            );
+        }
+
+        if (typeof value === 'string') {
+            return value.trim();
+        }
+
+        return value;
     }
 
     private parseDimension(value: string | undefined): number {

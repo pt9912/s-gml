@@ -102,6 +102,7 @@ console.log(surface.type);
 | `Box`               | ✅         | ✅           | `Feature` + `bbox`  | 2D/3D-Box              |
 | `Curve`             | ❌         | ✅           | `LineString`        | Kurve mit Segmenten    |
 | `Surface`           | ❌         | ✅           | `MultiPolygon`      | 3D-Oberfläche          |
+| `MultiSurface`      | ❌         | ✅           | `MultiPolygon`      | Sammlung von Flächen   |
 | `MultiPoint`        | ✅         | ✅           | `MultiPoint`        | Sammlung von Punkten   |
 | `MultiLineString`   | ✅         | ✅           | `MultiLineString`   | Sammlung von Linien    |
 | `MultiPolygon`      | ✅         | ✅           | `MultiPolygon`      | Sammlung von Polygonen |
