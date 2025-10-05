@@ -17,6 +17,7 @@ RUN pnpm install --prod=false
 COPY . .
 RUN pnpm run build
 RUN pnpm test
+RUN pnpm run test:coverage
 RUN pnpm run lint
 
 # Runtime-Stage: Nur Node 22 (kein pnpm nötig)
