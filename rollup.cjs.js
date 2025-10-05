@@ -21,5 +21,5 @@ export default {
             tslib: 'tslib'
         })
     ],
-    external: ['xml2js', 'xsd-validator', 'commander']
+    external: ['fast-xml-parser', 'xmllint-wasm', 'xsd-validator', 'commander']
 };

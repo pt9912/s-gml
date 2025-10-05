@@ -19,5 +19,5 @@ export default {
             declaration: false
         })
     ],
-    external: ['xml2js', 'xsd-validator', 'commander']
+    external: ['fast-xml-parser', 'xmllint-wasm', 'xsd-validator', 'commander']
 };

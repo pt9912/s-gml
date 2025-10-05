@@ -43,8 +43,8 @@
     },
     "dependencies": {
         "commander": "^11.0.0",
-        "libxmljs2": "^0.37.0",
-        "xml2js": "^0.6.2"
+        "fast-xml-parser": "^4.5.0",
+        "xmllint-wasm": "^5.0.0"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.7",
@@ -54,7 +54,6 @@
         "@types/geojson": "^7946.0.10",
         "@types/jest": "^29.5.4",
         "@types/node": "^20.11.0",
-        "@types/xml2js": "^0.4.11",
         "@typescript-eslint/eslint-plugin": "^8.45.0",
         "@typescript-eslint/parser": "^8.45.0",
         "eslint": "^8.57.0",
@@ -65,10 +64,5 @@
         "ts-jest": "^29.1.1",
         "tslib": "^2.6.2",
         "typescript": "^5.3.3"
-    },
-    "pnpm": {
-        "allowedBuiltDependencies": [
-            "libxmljs2"
-        ]
     }
 }
