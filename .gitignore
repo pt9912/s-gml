@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnpm-debug.log*
+
+# Build artifacts
+/dist/
+/coverage/
+/.lib/
+.eslintcache
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS / misc
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env*
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Test outputs
+/test-results/
+/logs/
+*.log
+
+# Optional caches
+.npm
