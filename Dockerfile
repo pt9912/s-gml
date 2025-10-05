@@ -30,11 +30,14 @@ FROM node:22-alpine
 
 WORKDIR /app
 
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 # Kopiere nur notwendige Dateien
-COPY --from=builder /app/dist ./dist/
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-lock.yaml ./
-COPY --from=builder /app/node_modules ./node_modules
+RUN pnpm install --prod --frozen-lockfile
+
+COPY --from=builder /app/dist ./dist/
 COPY entrypoint.sh .
 
 # ESM-Unterstützung
