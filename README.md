@@ -171,12 +171,12 @@ docker run --rm s-gml-cli convert https://example.com/data.gml \
 
 **Lokale Datei:**
 ```bash
-docker run --rm -v $(pwd):/data s-gml-cli validate /data/input.gml --version 3.2
+docker run --rm -v $(pwd):/data s-gml-cli validate /data/input.gml --gml-version 3.2
 ```
 
 **Von URL:**
 ```bash
-docker run --rm s-gml-cli validate https://example.com/data.gml --version 3.2
+docker run --rm s-gml-cli validate https://example.com/data.gml --gml-version 3.2
 ```
 
 ---

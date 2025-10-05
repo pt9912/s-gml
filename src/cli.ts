@@ -38,13 +38,14 @@ export function buildProgram(): Command {
     program
         .name('s-gml')
         .description('CLI tool for parsing, converting, and validating GML files')
-        .version('1.0.0');
+        .version('1.0.0', '-V, --version')
+        .option('--verbose', 'Show detailed error messages with stack traces');
 
     program
         .command('parse <input>')
         .description('Parse GML to GeoJSON (supports local files and URLs)')
         .option('--output <file>', 'Output file (default: stdout)')
-        .action(async (input, options) => {
+        .action(async (input, options, command) => {
             try {
                 const parser = new GmlParser();
                 const gml = await fetchInput(input);
@@ -56,11 +57,23 @@ export function buildProgram(): Command {
                     console.log(JSON.stringify(geojson, null, 2));
                 }
             } catch (error) {
+                const verbose = command.parent?.opts().verbose;
+
                 if (error instanceof OwsExceptionError) {
                     console.error('WFS Server returned an error:');
                     console.error(error.getAllMessages());
                     process.exit(1);
                 }
+
+                if (error instanceof Error) {
+                    if (verbose) {
+                        console.error(error.stack);
+                    } else {
+                        console.error(`Error: ${error.message}`);
+                    }
+                    process.exit(1);
+                }
+
                 throw error;
             }
         });
@@ -70,7 +83,7 @@ export function buildProgram(): Command {
         .description('Convert GML between versions (supports local files and URLs)')
         .requiredOption('--version <version>', 'Target GML version (2.1.2 or 3.2)')
         .option('--pretty', 'Pretty-print XML output')
-        .action(async (input, options) => {
+        .action(async (input, options, command) => {
             try {
                 const parser = new GmlParser();
                 const gml = await fetchInput(input);
@@ -80,11 +93,23 @@ export function buildProgram(): Command {
                 });
                 console.log(converted);
             } catch (error) {
+                const verbose = command.parent?.opts().verbose;
+
                 if (error instanceof OwsExceptionError) {
                     console.error('WFS Server returned an error:');
                     console.error(error.getAllMessages());
                     process.exit(1);
                 }
+
+                if (error instanceof Error) {
+                    if (verbose) {
+                        console.error(error.stack);
+                    } else {
+                        console.error(`Error: ${error.message}`);
+                    }
+                    process.exit(1);
+                }
+
                 throw error;
             }
         });
@@ -92,12 +117,27 @@ export function buildProgram(): Command {
     program
         .command('validate <input>')
         .description('Validate GML against XSD schema (supports local files and URLs)')
-        .requiredOption('--version <version>', 'GML version to validate against')
-        .action(async (input, options) => {
-            const gml = await fetchInput(input);
-            const isValid = await validateGml(gml, options.version);
-            console.log(`GML is ${isValid ? 'valid' : 'invalid'} for version ${options.version}`);
-            process.exit(isValid ? 0 : 1);
+        .requiredOption('--gml-version <version>', 'GML version to validate against')
+        .action(async (input, options, command) => {
+            try {
+                const gml = await fetchInput(input);
+                const isValid = await validateGml(gml, options.gmlVersion);
+                console.log(`GML is ${isValid ? 'valid' : 'invalid'} for version ${options.gmlVersion}`);
+                process.exit(isValid ? 0 : 1);
+            } catch (error) {
+                const verbose = command.parent?.opts().verbose;
+
+                if (error instanceof Error) {
+                    if (verbose) {
+                        console.error(error.stack);
+                    } else {
+                        console.error(`Error: ${error.message}`);
+                    }
+                    process.exit(1);
+                }
+
+                throw error;
+            }
         });
 
     return program;
