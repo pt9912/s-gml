@@ -1,2 +1,2 @@
 #!/bin/sh
-node --input-type=module --eval "import('./dist/cli.js')"
+node dist/cli.js "$@"
