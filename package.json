@@ -43,11 +43,12 @@
     },
     "dependencies": {
         "commander": "^11.0.0",
-        "xml2js": "^0.6.2",
-        "xsd-validator": "^1.1.1"
+        "libxmljs2": "^0.37.0",
+        "xml2js": "^0.6.2"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.7",
+        "@rollup/plugin-json": "^6.1.0",
         "@rollup/plugin-node-resolve": "^15.2.3",
         "@rollup/plugin-typescript": "^11.1.6",
         "@types/geojson": "^7946.0.10",
@@ -66,8 +67,8 @@
         "typescript": "^5.3.3"
     },
     "pnpm": {
-        "trustedDependencies": [
-            "libxmljs"
+        "allowedBuiltDependencies": [
+            "libxmljs2"
         ]
     }
 }
