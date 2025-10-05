@@ -6,12 +6,16 @@ jest.mock('node:fs', () => ({
     writeFileSync: jest.fn(),
 }));
 
+// Mock global fetch
+global.fetch = jest.fn();
+
 jest.mock('../src/validator.js', () => ({
     validateGml: jest.fn().mockResolvedValue(true),
 }));
 
 const mockedReadFile = readFileSync as jest.MockedFunction<typeof readFileSync>;
 const mockedWriteFile = writeFileSync as jest.MockedFunction<typeof writeFileSync>;
+const mockedFetch = global.fetch as jest.MockedFunction<typeof fetch>;
 
 const samplePoint = `
 <gml:Point xmlns:gml="http://www.opengis.net/gml/3.2" srsName="EPSG:4326">
@@ -146,6 +150,46 @@ describe('CLI', () => {
             const owsError = error as InstanceType<typeof OwsExceptionError>;
             expect(owsError.message).toContain('InvalidParameterValue');
         }
+    });
+
+    it('fetches GML from URL and parses it', async () => {
+        const mockResponse = {
+            ok: true,
+            text: jest.fn().mockResolvedValue(samplePoint),
+        } as unknown as Response;
+
+        mockedFetch.mockResolvedValueOnce(mockResponse);
+
+        const { GmlParser } = await import('../src/index.js');
+        const parser = new GmlParser();
+
+        const gml = await (async () => {
+            const response = await fetch('https://example.com/point.gml');
+            return await response.text();
+        })();
+
+        const result = await parser.parse(gml);
+
+        expect(mockedFetch).toHaveBeenCalledWith('https://example.com/point.gml');
+        expect(result).toHaveProperty('type', 'Point');
+        expect(result).toHaveProperty('coordinates', [10, 20]);
+    });
+
+    it('handles HTTP errors when fetching from URL', async () => {
+        const mockResponse = {
+            ok: false,
+            status: 404,
+            statusText: 'Not Found',
+        } as Response;
+
+        mockedFetch.mockResolvedValueOnce(mockResponse);
+
+        await expect(async () => {
+            const response = await fetch('https://example.com/missing.gml');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+        }).rejects.toThrow('HTTP 404: Not Found');
     });
 
 });

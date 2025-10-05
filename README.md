@@ -15,6 +15,7 @@ inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-Unterstützung und Dock
 | **GML → GeoJSON**          | Parsen aller GML-Elemente nach GeoJSON              |
 | **Versionen konvertieren** | GML 2.1.2 ↔ 3.2 (inkl. FeatureCollections)          |
 | **WFS-Unterstützung**      | Parsen von WFS-FeatureCollections                   |
+| **URL-Unterstützung**      | Direktes Laden von GML-Daten aus URLs               |
 | **OWS Exception Handling** | Automatische Erkennung und Behandlung von WFS-Fehlern |
 | **XSD-Validierung**        | Prüfung gegen offizielle GML-Schemata               |
 | **Neue GML-Elemente**      | `Envelope`, `Box`, `Curve`, `Surface`, `LinearRing` |
@@ -141,19 +142,41 @@ docker build -t s-gml-cli .
 ```
 
 ### GML → GeoJSON konvertieren
+
+**Lokale Datei:**
 ```bash
 docker run --rm -v $(pwd):/data s-gml-cli parse /data/input.gml --output /data/output.geojson
 ```
 
+**Von URL:**
+```bash
+docker run --rm s-gml-cli parse https://example.com/data.gml --output /data/output.geojson
+```
+
 ### GML-Versionen konvertieren (3.2 → 2.1.2)
+
+**Lokale Datei:**
 ```bash
 docker run --rm -v $(pwd):/data s-gml-cli convert /data/input.gml \
   --version 2.1.2 --pretty > output.gml
 ```
 
-### GML validieren
+**Von URL:**
 ```bash
-docker run --rm -v \$(pwd):/data s-gml-cli validate /data/input.gml --version 3.2
+docker run --rm s-gml-cli convert https://example.com/data.gml \
+  --version 2.1.2 --pretty > output.gml
+```
+
+### GML validieren
+
+**Lokale Datei:**
+```bash
+docker run --rm -v $(pwd):/data s-gml-cli validate /data/input.gml --version 3.2
+```
+
+**Von URL:**
+```bash
+docker run --rm s-gml-cli validate https://example.com/data.gml --version 3.2
 ```
 
 ---

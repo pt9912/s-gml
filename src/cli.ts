@@ -3,6 +3,27 @@ import { GmlParser, validateGml, OwsExceptionError } from './index.js';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { Command } from 'commander';
 
+/**
+ * Checks if a string is a URL
+ */
+function isUrl(str: string): boolean {
+    return str.startsWith('http://') || str.startsWith('https://');
+}
+
+/**
+ * Fetches content from a URL or reads from a file
+ */
+async function fetchInput(input: string): Promise<string> {
+    if (isUrl(input)) {
+        const response = await fetch(input);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return await response.text();
+    }
+    return readFileSync(input, 'utf-8');
+}
+
 export function buildProgram(): Command {
     const program = new Command();
 
@@ -13,12 +34,12 @@ export function buildProgram(): Command {
 
     program
         .command('parse <input>')
-        .description('Parse GML to GeoJSON')
+        .description('Parse GML to GeoJSON (supports local files and URLs)')
         .option('--output <file>', 'Output file (default: stdout)')
         .action(async (input, options) => {
             try {
                 const parser = new GmlParser();
-                const gml = readFileSync(input, 'utf-8');
+                const gml = await fetchInput(input);
                 const geojson = await parser.parse(gml);
                 if (options.output) {
                     writeFileSync(options.output, JSON.stringify(geojson, null, 2));
@@ -38,13 +59,13 @@ export function buildProgram(): Command {
 
     program
         .command('convert <input>')
-        .description('Convert GML between versions')
+        .description('Convert GML between versions (supports local files and URLs)')
         .requiredOption('--version <version>', 'Target GML version (2.1.2 or 3.2)')
         .option('--pretty', 'Pretty-print XML output')
         .action(async (input, options) => {
             try {
                 const parser = new GmlParser();
-                const gml = readFileSync(input, 'utf-8');
+                const gml = await fetchInput(input);
                 const converted = await parser.convert(gml, {
                     outputVersion: options.version as '2.1.2' | '3.2',
                     prettyPrint: options.pretty,
@@ -62,10 +83,10 @@ export function buildProgram(): Command {
 
     program
         .command('validate <input>')
-        .description('Validate GML against XSD schema')
+        .description('Validate GML against XSD schema (supports local files and URLs)')
         .requiredOption('--version <version>', 'GML version to validate against')
         .action(async (input, options) => {
-            const gml = readFileSync(input, 'utf-8');
+            const gml = await fetchInput(input);
             const isValid = await validateGml(gml, options.version);
             console.log(`GML is ${isValid ? 'valid' : 'invalid'} for version ${options.version}`);
             process.exit(isValid ? 0 : 1);
