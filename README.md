@@ -169,6 +169,8 @@ cd s-gml
 pnpm install
 pnpm run build
 pnpm test
+# optional: Coverage-Report
+pnpm run test:coverage
 ```
 
 ### Docker-CLI lokal testen

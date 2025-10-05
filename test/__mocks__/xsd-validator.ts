@@ -1,3 +1,2 @@
-export default async function validate(): Promise<true> {
-    return true;
-}
+const validate = jest.fn().mockResolvedValue(true);
+export default validate;
