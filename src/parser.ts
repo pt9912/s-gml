@@ -115,7 +115,7 @@ export class GmlParser {
     private parsePoint(element: any, version: GmlVersion): GmlPoint {
         const srsName = element.$?.srsName;
         const srsDimension = this.parseDimension(element.$?.srsDimension);
-        const source = version === '2.1.2' ? element['gml:coordinates']?._ : element['gml:pos']?._;
+        const source = version === '2.1.2' ? this.getText(element['gml:coordinates']) : this.getText(element['gml:pos']);
         if (typeof source !== 'string') throw new Error('Invalid GML Point');
         const tuples = this.toCoordinateTuples(parseCoordinates(source, version, srsDimension), srsDimension);
         const [coordinates] = tuples;
@@ -126,7 +126,7 @@ export class GmlParser {
     private parseLineString(element: any, version: GmlVersion): GmlLineString {
         const srsName = element.$?.srsName;
         const srsDimension = this.parseDimension(element.$?.srsDimension);
-        const source = version === '2.1.2' ? element['gml:coordinates']?._ : element['gml:posList']?._;
+        const source = version === '2.1.2' ? this.getText(element['gml:coordinates']) : this.getText(element['gml:posList']);
         if (typeof source !== 'string') throw new Error('Invalid GML LineString');
         const coordinates = this.toCoordinateTuples(parseCoordinates(source, version, srsDimension), srsDimension);
         return { type: 'LineString', coordinates, srsName, version };
@@ -142,15 +142,15 @@ export class GmlParser {
     private parseLinearRing(element: any, version: GmlVersion): GmlLinearRing {
         const srsName = element.$?.srsName;
         const srsDimension = this.parseDimension(element.$?.srsDimension);
-        const source = version === '2.1.2' ? element['gml:coordinates']?._ : element['gml:posList']?._;
+        const source = version === '2.1.2' ? this.getText(element['gml:coordinates']) : this.getText(element['gml:posList']);
         if (typeof source !== 'string') throw new Error('Invalid GML LinearRing');
         const coordinates = this.toCoordinateTuples(parseCoordinates(source, version, srsDimension), srsDimension);
         return { type: 'LinearRing', coordinates, srsName, version };
     }
 
     private parseEnvelope(element: any, version: GmlVersion): GmlEnvelope {
-        const lower = element['gml:lowerCorner']?._;
-        const upper = element['gml:upperCorner']?._;
+        const lower = this.getText(element['gml:lowerCorner']);
+        const upper = this.getText(element['gml:upperCorner']);
         if (typeof lower !== 'string' || typeof upper !== 'string') throw new Error('Invalid GML Envelope');
         const lowerVals = lower.trim().split(/\s+/).map(Number);
         const upperVals = upper.trim().split(/\s+/).map(Number);
@@ -160,7 +160,7 @@ export class GmlParser {
     }
 
     private parseBox(element: any, version: GmlVersion): GmlBox {
-        const coordinatesText = element['gml:coordinates']?._;
+        const coordinatesText = this.getText(element['gml:coordinates']);
         if (typeof coordinatesText !== 'string') throw new Error('Invalid GML Box');
         const values = coordinatesText.trim().split(/\s+/).map(Number);
         if (values.length < 4) throw new Error('Invalid GML Box');
@@ -173,7 +173,7 @@ export class GmlParser {
 
         const coordinates: number[][] = segmentNodes.map(segment => {
             const srsDimension = this.parseDimension(segment.$?.srsDimension) || this.parseDimension(element.$?.srsDimension);
-            const source = segment['gml:posList']?._ ?? segment['gml:coordinates']?._;
+            const source = this.getText(segment['gml:posList']) ?? this.getText(segment['gml:coordinates']);
             if (typeof source !== 'string') throw new Error('Invalid GML LineStringSegment');
             return this.toCoordinateTuples(parseCoordinates(source, version, srsDimension), srsDimension);
         }).flat();
@@ -233,7 +233,7 @@ export class GmlParser {
 
         if (version === '2.1.2') {
             const srsDimension = this.parseDimension(element.$?.srsDimension);
-            const source = element['gml:coordinates']?._;
+            const source = this.getText(element['gml:coordinates']);
             if (typeof source !== 'string') throw new Error('Invalid GML MultiPoint');
             const coordinates = this.toCoordinateTuples(parseCoordinates(source, version, srsDimension), srsDimension) as number[][];
             return { type: 'MultiPoint', coordinates, srsName, version };
@@ -268,7 +268,7 @@ export class GmlParser {
 
         if (version === '2.1.2') {
             const srsDimension = this.parseDimension(element.$?.srsDimension);
-            const source = element['gml:coordinates']?._;
+            const source = this.getText(element['gml:coordinates']);
             if (typeof source !== 'string') throw new Error('Invalid GML MultiLineString');
             const lines = this.toCoordinateTuples(parseCoordinates(source, version, srsDimension), srsDimension) as number[][];
             return { type: 'MultiLineString', coordinates: [lines], srsName, version };
@@ -378,24 +378,24 @@ export class GmlParser {
 
     private extractPolygonCoordinates(element: any, version: GmlVersion, srsDimension: number): number[][][] {
         if (version === '2.1.2') {
-            const outerText = element['gml:outerBoundaryIs']?.['gml:LinearRing']?.['gml:coordinates']?._;
+            const outerText = this.getText(element['gml:outerBoundaryIs']?.['gml:LinearRing']?.['gml:coordinates']);
             if (typeof outerText !== 'string') throw new Error('Invalid GML Polygon');
             const exteriorRing = this.toCoordinateTuples(parseCoordinates(outerText, version, srsDimension), srsDimension);
             const innerBoundaries = this.ensureArray(element['gml:innerBoundaryIs']);
             const interiorRings = innerBoundaries.map(interior => {
-                const text = interior['gml:LinearRing']?.['gml:coordinates']?._;
+                const text = this.getText(interior['gml:LinearRing']?.['gml:coordinates']);
                 if (typeof text !== 'string') return [];
                 return this.toCoordinateTuples(parseCoordinates(text, version, srsDimension), srsDimension);
             }).filter(ring => ring.length > 0);
             return [exteriorRing, ...interiorRings];
         }
 
-        const exteriorText = element['gml:exterior']?.['gml:LinearRing']?.['gml:posList']?._;
+        const exteriorText = this.getText(element['gml:exterior']?.['gml:LinearRing']?.['gml:posList']);
         if (typeof exteriorText !== 'string') throw new Error('Invalid GML Polygon');
         const exteriorRing = this.toCoordinateTuples(parseCoordinates(exteriorText, version, srsDimension), srsDimension);
         const interiors = this.ensureArray(element['gml:interior']);
         const interiorRings = interiors.map(interior => {
-            const text = interior['gml:LinearRing']?.['gml:posList']?._;
+            const text = this.getText(interior['gml:LinearRing']?.['gml:posList']);
             if (typeof text !== 'string') return [];
             return this.toCoordinateTuples(parseCoordinates(text, version, srsDimension), srsDimension);
         }).filter(ring => ring.length > 0);
@@ -476,13 +476,30 @@ export class GmlParser {
         }
     }
 
-    private findFirstGmlEntry(doc: any): { key: string; value: any } | undefined {
-        if (!doc || typeof doc !== 'object') return undefined;
-        for (const [key, value] of Object.entries(doc)) {
+    private findFirstGmlEntry(node: any): { key: string; value: any } | undefined {
+        if (!node || typeof node !== 'object') return undefined;
+
+        for (const [key, value] of Object.entries(node)) {
+            if (key === '$' || key === '_') continue;
             if (key.startsWith('gml:')) {
                 return { key, value };
             }
         }
+
+        for (const [key, value] of Object.entries(node)) {
+            if (key === '$' || key === '_') continue;
+            if (!value) continue;
+            if (Array.isArray(value)) {
+                for (const item of value) {
+                    const result = this.findFirstGmlEntry(item);
+                    if (result) return result;
+                }
+            } else if (typeof value === 'object') {
+                const result = this.findFirstGmlEntry(value);
+                if (result) return result;
+            }
+        }
+
         return undefined;
     }
 
@@ -550,10 +567,12 @@ export class GmlParser {
             return value.map(item => this.normalizePropertyValue(item));
         }
 
+        const text = this.getText(value);
+        if (text !== undefined) {
+            return text.trim();
+        }
+
         if (typeof value === 'object') {
-            if (typeof value._ === 'string') {
-                return value._.trim();
-            }
             return Object.fromEntries(
                 Object.entries(value).map(([key, val]) => [key, this.normalizePropertyValue(val)])
             );
@@ -564,6 +583,23 @@ export class GmlParser {
         }
 
         return value;
+    }
+
+    private getText(value: any): string | undefined {
+        if (value === null || value === undefined) return undefined;
+        if (typeof value === 'string') return value;
+        if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+        if (Array.isArray(value)) {
+            for (const item of value) {
+                const result = this.getText(item);
+                if (result !== undefined) return result;
+            }
+            return undefined;
+        }
+        if (typeof value === 'object') {
+            if (typeof value._ === 'string') return value._;
+        }
+        return undefined;
     }
 
     private parseDimension(value: string | undefined): number {
