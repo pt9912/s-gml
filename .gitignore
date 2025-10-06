@@ -31,3 +31,6 @@ Thumbs.db
 
 # Optional caches
 .npm
+
+.claude/
+.wfs/
