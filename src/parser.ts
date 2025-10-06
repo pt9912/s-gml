@@ -384,7 +384,7 @@ export class GmlParser {
         const properties = this.extractFeatureProperties(element, geometryNode.featurePropertyKey ?? geometryNode.key);
 
         const feature: GmlFeature = {
-            id: element.$?.['gml:id'],
+            id: element.$?.['gml:id'] || element.$?.['fid'],
             geometry,
             properties,
             version,
