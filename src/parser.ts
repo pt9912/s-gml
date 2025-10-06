@@ -249,6 +249,11 @@ export class GmlParser {
         const memberNodes = this.ensureArray(element['gml:pointMember']);
         const membersContainer = element['gml:pointMembers'];
 
+        // Check if there are any member elements at all
+        if (memberNodes.length === 0 && !membersContainer) {
+            throw new Error('Invalid GML MultiPoint');
+        }
+
         const coordinates: number[][] = [];
 
         memberNodes.forEach(member => {
@@ -283,13 +288,19 @@ export class GmlParser {
 
         const lineStrings: number[][][] = [];
         const members = this.ensureArray(element['gml:lineStringMember']);
+        const membersContainer = element['gml:lineStringMembers'];
+
+        // Check if there are any member elements at all
+        if (members.length === 0 && !membersContainer) {
+            throw new Error('Invalid GML MultiLineString');
+        }
+
         members.forEach(member => {
             const lineNode = this.normalizeElement(member['gml:LineString']);
             if (!lineNode) return;
             lineStrings.push(this.parseLineString(lineNode, version).coordinates);
         });
 
-        const membersContainer = element['gml:lineStringMembers'];
         if (membersContainer) {
             const containerEntries = this.ensureArray(membersContainer);
             containerEntries.forEach(container => {
