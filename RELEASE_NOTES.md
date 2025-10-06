@@ -1,35 +1,36 @@
-# Release Notes - v1.1.4
+# Release Notes - v1.2.0
 
 **Release Date:** 2025-10-06
 
 ## 🎉 Overview
 
-This release adds full browser compatibility by splitting the validator into separate browser and Node.js versions. The npm package is now compatible with modern bundlers like Vite, Webpack, and esbuild, while the CLI tool retains native xmllint performance.
+This release significantly enhances WFS (Web Feature Service) support with comprehensive integration tests covering WFS 1.0, 1.1, and 2.0. Improved GML version detection, better feature parsing, and support for various WFS-specific elements ensure robust handling of real-world WFS responses.
 
 ---
 
 ## ✨ Highlights
 
-### 🌐 Browser Compatibility
+### 🗺️ WFS Integration Tests
 
-**Validator Split:**
-- **`validator.browser.ts`** - WASM-only validation using Fetch API (browser-compatible)
-- **`validator.node.ts`** - Native xmllint support for Node.js/CLI (up to 6x faster)
-- npm package exports browser validator by default
-- CLI tool uses Node.js validator with full performance
+**28 new comprehensive tests:**
+- **WFS 2.0 with GML 3.2** - 7 tests for `wfs:member` parsing
+- **WFS 1.1 with GML 3.0** - 5 tests for `gml:featureMembers` handling
+- **WFS 1.0 with GML 2.1.2** - 9 tests for legacy coordinate format
+- **Version comparison** - 4 tests ensuring consistency across WFS versions
+- **Real-world data integrity** - 3 tests with OpenStreetMap water_areas features
 
-**Fixed Issues:**
-- ✅ Resolved "Module externalized for browser compatibility" errors in Vite
-- ✅ No more Node.js built-in modules (child_process, fs, http) in browser bundles
-- ✅ Works with all modern bundlers (Vite, Webpack, Rollup, esbuild)
+**Real-world WFS Sample Files:**
+- `wfs-gml32-1-f.xml` - WFS 2.0 response with GML 3.2
+- `wfs-gml3-1-f.xml` - WFS 1.1 response with GML 3.0
+- `wfs-3-f.xml` - WFS 1.0 response with GML 2.1.2
 
-### 🧪 Enhanced Testing
+### 🔍 Enhanced GML Version Detection
 
-**Browser Compatibility Tests:**
-- 12 new tests ensuring browser compatibility
-- Static analysis: verifies no Node.js imports in browser code
-- Build verification: checks dist bundles for correct validator usage
-- **Total: 175 tests** (up from 163)
+**Content-based Detection:**
+- Intelligently detects GML 2.1.2 vs 3.x for unversioned namespace
+- Checks for GML 2.1.2 specific elements (`gml:coordinates`, `outerBoundaryIs`, `innerBoundaryIs`)
+- Defaults to GML 3.2 for modern WFS services using unversioned namespace
+- **Total: 203 tests** (up from 175)
 
 ---
 
@@ -37,47 +38,59 @@ This release adds full browser compatibility by splitting the validator into sep
 
 ### Added
 
-- **Browser-compatible validator** (`validator.browser.ts`)
-  - Uses xmllint-wasm for XSD validation
-  - Uses browser Fetch API for HTTP requests
-  - No Node.js dependencies
+- **WFS Integration Test Suite** (`test/wfs-integration.test.ts`)
+  - 28 comprehensive tests covering WFS 1.0, 1.1, and 2.0
+  - Tests for all WFS member element types
+  - Real-world OpenStreetMap water_areas feature testing
+  - Coordinate validation and geometry integrity checks
 
-- **Node.js-specific validator** (`validator.node.ts`)
-  - Native xmllint support (6x faster in Docker)
-  - Automatic fallback to WASM if xmllint not available
-  - Uses Node.js http/https modules
+- **WFS 2.0 Support**
+  - `wfs:member` element parsing
+  - Proper handling of WFS 2.0 FeatureCollection structure
 
-- **Browser compatibility test suite** (`test/browser-compat.test.ts`)
-  - 12 tests for import verification
-  - Distribution build checks
-  - Export validation
+- **GML 2.1.2 Feature ID Support**
+  - `fid` attribute support alongside `gml:id`
+  - Proper feature identification in WFS 1.0 responses
+
+- **Content-based GML Version Detection**
+  - `hasGml212Elements()` function for detecting GML 2.1.2 features
+  - Fallback detection for unversioned GML namespace
 
 ### Changed
 
-- **index.ts**: Exports browser validator by default for npm package
-- **cli.ts**: Uses Node.js validator for CLI tool
-- **Rollup configs**: Mark Node.js built-ins as external
-  - `node:child_process`, `node:http`, `node:https`
-  - `node:fs/promises`, `node:os`, `node:path`, `node:util`
+- **Improved GML Version Detection** (`src/utils.ts`)
+  - Added content-based detection for `http://www.opengis.net/gml` namespace
+  - Checks for GML 2.1.2 specific elements before defaulting to 3.2
+  - More accurate version detection for legacy WFS services
+
+- **Enhanced Feature Parsing** (`src/parser.ts`)
+  - Support for both `gml:featureMember` and `wfs:member` elements
+  - Improved `gml:featureMembers` array handling
+  - Better handling of WFS 1.1 feature collections
 
 ### Fixed
 
-- Browser compatibility errors with Vite/bundlers
-- "Module externalized for browser compatibility" warnings
-- Node.js modules being bundled in browser builds
+- WFS 2.0 feature extraction from `wfs:member` elements
+- WFS 1.1 array handling in `gml:featureMembers` containers
+- GML version detection for unversioned namespace
+- MultiPoint and MultiLineString validation for empty member elements
 
 ---
 
 ## 📊 Test Coverage
 
 ```
-File                   | % Stmts | % Branch | % Funcs | % Lines
------------------------|---------|----------|---------|----------
-validator.browser.ts   |   70.73 |    26.31 |   83.33 |   69.23
-validator.node.ts      |   18.88 |        0 |       0 |   19.54
+Test Suites: 11 passed, 11 total
+Tests:       203 passed, 203 total
 ```
 
-**Total:** 175 tests passing (10 test suites)
+**New Test Files:**
+- `test/wfs-integration.test.ts` - 28 WFS integration tests
+
+**Sample Files:**
+- `test/gml/wfs-gml32-1-f.xml` - WFS 2.0 with GML 3.2 (1 feature)
+- `test/gml/wfs-gml3-1-f.xml` - WFS 1.1 with GML 3.0 (1 feature)
+- `test/gml/wfs-3-f.xml` - WFS 1.0 with GML 2.1.2 (30 features)
 
 ---
 
@@ -89,75 +102,85 @@ None - this release is fully backward compatible.
 
 ## 📝 Commit Summary
 
-This release includes 3 commits since v1.1.3:
+This release includes 3 commits since v1.1.4:
 
-1. **12b580d** - feat: split validator into browser and Node.js versions
-2. **a08ace6** - test: add browser compatibility tests
-3. **718c210** - merge: browser compatibility features into main
+1. **fa6e664** - feat: add WFS integration tests and improve WFS parsing
+2. **c995952** - feat: add WFS 1.0 / GML 2.1.2 integration tests
+3. **7dcbc73** - fix: improve validation for empty MultiPoint and MultiLineString
 
 ---
 
 ## 🚀 Migration Guide
 
-No migration needed - this is a drop-in replacement for v1.1.3.
+No migration needed - this is a drop-in replacement for v1.1.4.
 
-### For npm Package Users
+### WFS Parsing Improvements
 
-The package now works in browsers! Use it with any bundler:
+The parser now automatically handles:
 
+**WFS 2.0 (`wfs:member`):**
 ```typescript
-import { validateGml } from '@npm9912/s-gml';
+import { GmlParser } from '@npm9912/s-gml';
 
-// Works in browser with Vite, Webpack, etc.
-const isValid = await validateGml(gmlXml, '3.2');
+const parser = new GmlParser();
+const result = await parser.parse(wfs20Xml);
+// Correctly extracts features from wfs:member elements
 ```
 
-### For CLI Users
+**WFS 1.0 (`fid` attributes):**
+```typescript
+// Feature IDs now correctly extracted from fid attribute
+const feature = result.features[0];
+console.log(feature.id); // "water_areas.230"
+```
 
-No changes required. The CLI automatically uses the faster Node.js validator:
-
-```bash
-docker run --rm -v $(pwd):/data s-gml-cli validate /data/input.gml --gml-version 3.2
+**Automatic Version Detection:**
+```typescript
+// GML version now auto-detected for unversioned namespace
+// Checks for GML 2.1.2 elements, defaults to 3.2
+const result = await parser.parse(wfsXml);
+console.log(result.version); // "2.1.2" or "3.2"
 ```
 
 ---
 
 ## 🧪 Testing
 
-All tests pass successfully:
+All 203 tests pass successfully:
 
 ```bash
 pnpm test
-# Test Suites: 10 passed, 10 total
-# Tests:       175 passed, 175 total
+# Test Suites: 11 passed, 11 total
+# Tests:       203 passed, 203 total
 ```
 
-Browser compatibility verified:
-- ✅ No Node.js imports in validator.browser.ts
-- ✅ Fetch API used for HTTP requests
-- ✅ dist/index.js contains browser validator
-- ✅ dist/cli.js contains Node.js validator
+WFS integration verified:
+- ✅ WFS 2.0 with `wfs:member` elements
+- ✅ WFS 1.1 with `gml:featureMembers` arrays
+- ✅ WFS 1.0 with GML 2.1.2 coordinates
+- ✅ Feature ID extraction from `fid` attribute
+- ✅ Content-based GML version detection
 
 ---
 
 ## 📦 Installation
 
 ```bash
-npm install @npm9912/s-gml@1.1.4
+npm install @npm9912/s-gml@1.2.0
 ```
 
 ## 🐳 Docker
 
 ```bash
 docker build -t s-gml-cli .
-docker run --rm -v $(pwd):/data s-gml-cli validate /data/input.gml --gml-version 3.2
+docker run --rm -v $(pwd)/test/gml:/data s-gml-cli parse /data/wfs-3-f.xml --output /data/output.geojson
 ```
 
 ---
 
 ## 🙏 Acknowledgments
 
-This release was developed with assistance from Claude Code to ensure optimal browser compatibility and performance.
+This release was developed with assistance from Claude Code to ensure comprehensive WFS compatibility and robust real-world data handling.
 
 ---
 
@@ -173,11 +196,11 @@ This release was developed with assistance from Claude Code to ensure optimal br
 ## 🔜 What's Next
 
 Future improvements may include:
-- Further coverage improvements for validator.node.ts
-- Additional WFS version support
+- Additional WFS 2.0 response format support
 - Performance optimizations for large FeatureCollections
-- Enhanced schema catalog for complex GML applications
+- Enhanced CRS transformation support
+- OGC API - Features compatibility
 
 ---
 
-**Full Changelog:** [v1.1.3...v1.1.4](https://github.com/pt9912/s-gml/compare/v1.1.3...v1.1.4)
+**Full Changelog:** [v1.1.4...v1.2.0](https://github.com/pt9912/s-gml/compare/v1.1.4...v1.2.0)

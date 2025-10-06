@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-10-06
+
+### Added
+- **WFS Integration Tests**: 28 comprehensive integration tests for WFS 1.0, 1.1, and 2.0
+  - WFS 2.0 with GML 3.2 parsing tests (7 tests)
+  - WFS 1.1 with GML 3.0 parsing tests (5 tests)
+  - WFS 1.0 with GML 2.1.2 parsing tests (9 tests)
+  - Version comparison tests (4 tests)
+  - Real-world data integrity tests (3 tests)
+- Support for `wfs:member` elements (WFS 2.0)
+- Support for `fid` attribute as feature ID (GML 2.1.2)
+- Content-based GML version detection for unversioned namespaces
+- Real-world WFS sample files for testing (wfs-gml32-1-f.xml, wfs-gml3-1-f.xml, wfs-3-f.xml)
+
+### Changed
+- Improved GML version detection with content-based fallback
+  - Checks for GML 2.1.2 specific elements (gml:coordinates, outerBoundaryIs, innerBoundaryIs)
+  - Defaults to GML 3.2 for unversioned namespace (http://www.opengis.net/gml)
+- Enhanced `gml:featureMembers` array handling
+- Total test count: 203 tests (up from 175)
+
+### Fixed
+- WFS 2.0 feature extraction from `wfs:member` elements
+- WFS 1.1 array handling in `gml:featureMembers`
+- GML 2.1.2 detection for unversioned GML namespace
+- MultiPoint and MultiLineString validation for empty member elements
+
 ## [1.1.4] - 2025-10-06
 
 ### Added
@@ -89,6 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI tool for GML operations
 - GeoJSON conversion
 
+[1.2.0]: https://github.com/pt9912/s-gml/compare/v1.1.4...v1.2.0
 [1.1.4]: https://github.com/pt9912/s-gml/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/pt9912/s-gml/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/pt9912/s-gml/compare/v1.1.1...v1.1.2
