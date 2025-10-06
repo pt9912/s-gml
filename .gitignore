@@ -32,5 +32,6 @@ Thumbs.db
 # Optional caches
 .npm
 
+# Local development directories
 .claude/
 .wfs/

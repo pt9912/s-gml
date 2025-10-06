@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wfs:FeatureCollection xmlns="http://www.opengis.net/wfs" xmlns:wfs="http://www.opengis.net/wfs" xmlns:gml="http://www.opengis.net/gml" xmlns:osm="http://openstreemap.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wfs https://ahocevar.com/geoserver/schemas/wfs/1.0.0/WFS-basic.xsd http://openstreemap.org https://ahocevar.com/geoserver/wfs?service=WFS&amp;version=1.0.0&amp;request=DescribeFeatureType&amp;typeName=osm%3Awater_areas">
+  <gml:boundedBy>
+    <gml:null>unknown</gml:null>
+  </gml:boundedBy>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.230">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.84807555,43.99535108 -77.84804501,43.99546365 -77.84790434,43.99559995 -77.84756307,43.99563239 -77.84729842,43.99549739 -77.84727587,43.99529195 -77.84742185,43.99517498 -77.84752363,43.99514047 -77.84778468,43.99511946 -77.84803342,43.99519656 -77.84807555,43.99535108</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80315040</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+</wfs:FeatureCollection>

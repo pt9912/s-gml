@@ -1,0 +1,606 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wfs:FeatureCollection xmlns="http://www.opengis.net/wfs" xmlns:wfs="http://www.opengis.net/wfs" xmlns:gml="http://www.opengis.net/gml" xmlns:osm="http://openstreemap.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wfs https://ahocevar.com/geoserver/schemas/wfs/1.0.0/WFS-basic.xsd http://openstreemap.org https://ahocevar.com/geoserver/wfs?service=WFS&amp;version=1.0.0&amp;request=DescribeFeatureType&amp;typeName=osm%3Awater_areas">
+  <gml:boundedBy>
+    <gml:null>unknown</gml:null>
+  </gml:boundedBy>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.230">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.84807555,43.99535108 -77.84804501,43.99546365 -77.84790434,43.99559995 -77.84756307,43.99563239 -77.84729842,43.99549739 -77.84727587,43.99529195 -77.84742185,43.99517498 -77.84752363,43.99514047 -77.84778468,43.99511946 -77.84803342,43.99519656 -77.84807555,43.99535108</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80315040</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.804">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.85107009,43.99532749 -77.85104161,43.99546798 -77.85096732,43.99556279 -77.85062434,43.99573178 -77.85048412,43.99576765 -77.85033006,43.99577346 -77.85027131,43.99576176 -77.85020977,43.99565817 -77.8502369,43.99555393 -77.85036078,43.99539606 -77.85050029,43.99529595 -77.85061572,43.99529169 -77.85067896,43.99525853 -77.85089824,43.99524755 -77.85107009,43.99532749</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80314633</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.1981">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.87473171,43.99676595 -77.87440625,43.99685636 -77.87390203,43.99698418 -77.87381642,43.99697623 -77.87364709,43.99682385 -77.87363298,43.99662927 -77.87368886,43.99654907 -77.87379261,43.99654235 -77.87396653,43.99665008 -77.87412257,43.99667199 -77.87431184,43.99667315 -77.87466937,43.99659825 -77.87473171,43.99676595</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80315071</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.2257">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.8789829,43.99729307 -77.87887672,43.99737237 -77.87821233,43.99715788 -77.87787797,43.99707297 -77.87782165,43.99698877 -77.87792828,43.99680905 -77.87814307,43.99684278 -77.87822418,43.99689539 -77.87834492,43.99691038 -77.87892658,43.99720874 -77.8789829,43.99729307</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80314429</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.2783">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.27124872,43.98992037 -77.27124863,43.99011258 -77.27121171,43.99020565 -77.27113301,43.99024436 -77.27074117,43.99027319 -77.27050823,43.99038073 -77.27027557,43.99036018 -77.27020856,43.99033717 -77.27022023,43.99027545 -77.27029408,43.99021748 -77.27086855,43.99007975 -77.2708769,43.98996257 -77.27095901,43.98985128 -77.27112151,43.98985736 -77.27124872,43.98992037</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80313169</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.3247">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.24229565,43.98809906 -77.24226017,43.98834809 -77.24215444,43.98851859 -77.24178263,43.98849655 -77.2416521,43.98844206 -77.24165731,43.98826917 -77.24186006,43.98810966 -77.24198574,43.98808077 -77.24229565,43.98809906</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80309632</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.3626">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.21653601,43.97993356 -77.21651913,43.97997583 -77.21641366,43.98001804 -77.21636857,43.97997208 -77.21611731,43.97996575 -77.21549065,43.98026626 -77.21539345,43.98025528 -77.21533173,43.98018753 -77.21536533,43.98010298 -77.21590989,43.97984959 -77.21634863,43.97983058 -77.21649083,43.97988753 -77.21653601,43.97993356</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80309723</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.3774">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.14241827,43.99923197 -77.14202049,43.99943313 -77.14169674,43.99910008 -77.1421061,43.99890124 -77.14241827,43.99923197</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80309804</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.3917">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.06851297,43.91414297 -77.06849725,43.91427706 -77.06809849,43.91445004 -77.06794038,43.91430696 -77.06788433,43.91413036 -77.0679985,43.91403529 -77.06805357,43.91405587 -77.06820772,43.91398747 -77.06835145,43.91400837 -77.06839781,43.91408214 -77.06851297,43.91414297</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80308536</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.3957">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.87590482,43.99654306 -77.87579137,43.99657525 -77.875223,43.99667205 -77.87483673,43.99672297 -77.87477393,43.99665564 -77.87479172,43.99647657 -77.87490203,43.99645285 -77.87540347,43.99649796 -77.87589557,43.99646817 -77.87590482,43.99654306</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80315060</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.3996">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.08107133,43.90413967 -77.08048167,43.90441015 -77.0802641,43.90409908 -77.08091179,43.90396886 -77.08107133,43.90413967</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80308739</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.4064">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.15224745,43.99339906 -77.15211917,43.99372045 -77.15200293,43.99391614 -77.15189226,43.99393895 -77.15185722,43.99393165 -77.15170173,43.99384434 -77.15171888,43.99373796 -77.15190573,43.99342879 -77.15195775,43.99339376 -77.15213867,43.99338556 -77.15224745,43.99339906</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80310232</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.4102">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.08581838,43.95699137 -77.08569397,43.95711198 -77.08527706,43.95717147 -77.08517878,43.95706846 -77.08514088,43.95694139 -77.08536743,43.95678716 -77.08553164,43.95675735 -77.08581838,43.95699137</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80309057</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.4550">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.27184834,43.97545078 -77.27179633,43.97561394 -77.27163373,43.97592825 -77.27147797,43.97609749 -77.27138427,43.97607803 -77.27135571,43.97598979 -77.27162394,43.97544095 -77.27167083,43.97538665 -77.27182993,43.97540119 -77.27184834,43.97545078</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80312932</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.4658">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.18578812,43.99790634 -77.18573278,43.99794976 -77.18556354,43.99796049 -77.18508303,43.99786065 -77.18505653,43.99773619 -77.18507674,43.99768533 -77.18526108,43.99766866 -77.18567799,43.99773696 -77.18576494,43.99777328 -77.18577824,43.99780359 -77.18578812,43.99790634</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80310357</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.4818">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.11691761,43.97842688 -77.11673768,43.97865494 -77.11658011,43.97866793 -77.1163797,43.97853457 -77.11643072,43.97834368 -77.11654813,43.97830399 -77.11684116,43.97830096 -77.11691294,43.97834349 -77.11691761,43.97842688</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80309150</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.4856">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.28377923,43.99888037 -77.28334202,43.99911966 -77.28301368,43.99924419 -77.28296347,43.99917885 -77.28297685,43.99908095 -77.2835515,43.99881504 -77.28372578,43.99875947 -77.28375084,43.99879204 -77.28377923,43.99888037</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80313211</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.4955">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.28939783,43.99609406 -77.28888696,43.99632735 -77.28877979,43.99627778 -77.28877143,43.99607467 -77.28916175,43.99595376 -77.28926227,43.99595628 -77.28938947,43.99601903 -77.28939783,43.99609406</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80313057</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.5049">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.10739215,43.98178104 -77.10736816,43.98190437 -77.10727033,43.98208555 -77.10711726,43.98224599 -77.10701342,43.98225174 -77.10694838,43.98219247 -77.10698099,43.98201594 -77.10713244,43.98182764 -77.10712777,43.98174426 -77.10722668,43.98171905 -77.10739215,43.98178104</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80309282</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.5159">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.14845198,43.94173653 -77.14825058,43.94192359 -77.14808313,43.94196195 -77.14798953,43.94194248 -77.14788604,43.94188427 -77.1480675,43.94161984 -77.14822821,43.94159837 -77.14835694,43.94162515 -77.14841704,43.94166519 -77.14845198,43.94173653</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80309810</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.5219">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.13521459,43.95759005 -77.13515395,43.95767819 -77.1348593,43.95771757 -77.13469365,43.95771964 -77.13448623,43.95766726 -77.13449171,43.95755849 -77.1345554,43.95752597 -77.13518647,43.95750178 -77.13521459,43.95759005</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80310187</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.5256">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.1030363,43.98232898 -77.10297594,43.98235296 -77.10288907,43.98231644 -77.10263566,43.98206209 -77.10256047,43.98202809 -77.10258598,43.98193255 -77.10267833,43.98186029 -77.10274211,43.98182777 -77.10283391,43.98188356 -77.10300046,43.98210158 -77.1030363,43.98232898</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80309339</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.5315">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.20774016,43.97854905 -77.20758906,43.97873749 -77.20739458,43.97890776 -77.20729235,43.97894156 -77.20725543,43.97890646 -77.20721878,43.97887136 -77.20725588,43.97877828 -77.20752762,43.97847743 -77.20765841,43.97840387 -77.20773702,43.97842934 -77.20774016,43.97854905</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80309963</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.5351">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.02020553,43.99979895 -77.01993091,43.99999998 -77.01983398,43.99999998 -77.01972089,43.99989898 -77.0197163,43.99981555 -77.01975861,43.99974195 -77.02002425,43.99958674 -77.02011264,43.99965116 -77.02020553,43.99979895</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80309212</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.5446">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.1715544,43.98991178 -77.17147032,43.98999508 -77.17112492,43.99016138 -77.17104973,43.99012745 -77.17097445,43.99009345 -77.1709528,43.99005235 -77.17101667,43.98995566 -77.17117271,43.98985076 -77.17137887,43.98981115 -77.17150922,43.98986576 -77.1715544,43.98991178</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80310184</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.5573">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.27033863,43.97743667 -77.27008064,43.97770378 -77.26992496,43.97780889 -77.26979776,43.97774599 -77.26990663,43.97756706 -77.27008755,43.97736647 -77.27022158,43.97734837 -77.27033863,43.97743667</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80313178</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.18574">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.89897913,43.99868864 -77.89895946,43.99883998 -77.89874179,43.99897924 -77.89634617,43.99985407 -77.89616614,43.99992786 -77.89600885,43.99994214 -77.89583251,43.99990719 -77.89572184,43.99976638 -77.89529918,43.99895184 -77.8952707,43.99882745 -77.89546402,43.99861943 -77.89813902,43.99797367 -77.89851883,43.99793968 -77.89874395,43.99811229 -77.89897913,43.99868864</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80314190</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>basin</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.25493">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.87976884,43.99891055 -77.87873317,43.99900567 -77.87864361,43.99841258 -77.87964406,43.99831048 -77.87976884,43.99891055</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80314793</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.26245">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.87799943,43.99980005 -77.87788148,43.99987707 -77.87733674,43.99997859 -77.87701595,43.99999998 -77.87676343,44.00018595 -77.8766807,44.00026996 -77.87647714,44.00033897 -77.87630817,44.00035099 -77.87618734,44.00033606 -77.87616632,44.00025884 -77.87608853,44.00019765 -77.87607793,43.99999998 -77.87694597,43.99980948 -77.87720496,43.99976056 -77.87798694,43.99973368 -77.87799943,43.99980005</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80314288</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+  <gml:featureMember>
+    <osm:water_areas fid="water_areas.26898">
+      <osm:the_geom>
+        <gml:MultiPolygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:polygonMember>
+            <gml:Polygon>
+              <gml:outerBoundaryIs>
+                <gml:LinearRing>
+                  <gml:coordinates decimal="." cs="," ts=" ">-77.87958648,43.99826247 -77.8788,43.99833413 -77.87869104,43.99779196 -77.87945065,43.99772404 -77.87958648,43.99826247</gml:coordinates>
+                </gml:LinearRing>
+              </gml:outerBoundaryIs>
+            </gml:Polygon>
+          </gml:polygonMember>
+        </gml:MultiPolygon>
+      </osm:the_geom>
+      <osm:osm_id>80314507</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </gml:featureMember>
+</wfs:FeatureCollection>
