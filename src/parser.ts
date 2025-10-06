@@ -346,7 +346,7 @@ export class GmlParser {
 
         const boundsNode = element['gml:boundedBy'];
         let bounds: GmlEnvelope | undefined;
-        if (boundsNode) {
+        if (boundsNode && !boundsNode['gml:null']) {
             const envelopeNode = boundsNode['gml:Envelope'] ?? boundsNode;
             bounds = this.parseEnvelope(this.normalizeElement(envelopeNode), version);
         }
@@ -375,7 +375,7 @@ export class GmlParser {
         };
 
         const boundedByNode = element['gml:boundedBy'];
-        if (boundedByNode) {
+        if (boundedByNode && !boundedByNode['gml:null']) {
             const envelopeNode = boundedByNode['gml:Envelope'] ?? boundedByNode;
             feature.boundedBy = this.parseEnvelope(this.normalizeElement(envelopeNode), version);
         }
@@ -596,7 +596,7 @@ export class GmlParser {
         }
 
         for (const [key, value] of Object.entries(featureElement)) {
-            if (key === '$' || key === '#name') continue;
+            if (key === '$' || key === '#name' || key === '_') continue;
             if (geometryPropertyKey && key === geometryPropertyKey) continue;
             if (key.startsWith('gml:')) continue;
             properties[key] = this.normalizePropertyValue(value);
