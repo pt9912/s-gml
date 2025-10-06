@@ -1184,3 +1184,135 @@ describe('GmlParser.parse', () => {
         });
     });
 });
+
+describe('GmlParser URL Methods', () => {
+    const originalFetch = global.fetch;
+
+    afterEach(() => {
+        global.fetch = originalFetch;
+    });
+
+    describe('parseFromUrl', () => {
+        it('fetches and parses GML from URL', async () => {
+            const gmlXml = `
+                <gml:Point xmlns:gml="http://www.opengis.net/gml/3.2">
+                    <gml:pos>10 20</gml:pos>
+                </gml:Point>
+            `;
+
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                text: async () => gmlXml,
+            } as Response);
+
+            const parser = new GmlParser();
+            const result = await parser.parseFromUrl('https://example.com/data.gml');
+
+            expect(global.fetch).toHaveBeenCalledWith('https://example.com/data.gml');
+            expect(result).toEqual({
+                type: 'Point',
+                coordinates: [10, 20],
+            });
+        });
+
+        it('throws error when fetch fails', async () => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: false,
+                status: 404,
+                statusText: 'Not Found',
+            } as Response);
+
+            const parser = new GmlParser();
+            await expect(parser.parseFromUrl('https://example.com/missing.gml'))
+                .rejects.toThrow('Failed to fetch GML from https://example.com/missing.gml (404 Not Found)');
+        });
+
+        it('parses WFS response from URL', async () => {
+            const wfsXml = `
+                <wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:test="http://example.com/test">
+                    <wfs:member>
+                        <test:TestFeature gml:id="f1">
+                            <test:name>Test</test:name>
+                            <test:geometry>
+                                <gml:Point>
+                                    <gml:pos>5 10</gml:pos>
+                                </gml:Point>
+                            </test:geometry>
+                        </test:TestFeature>
+                    </wfs:member>
+                </wfs:FeatureCollection>
+            `;
+
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                text: async () => wfsXml,
+            } as Response);
+
+            const parser = new GmlParser();
+            const result = await parser.parseFromUrl('https://example.com/wfs?request=GetFeature') as any;
+
+            expect(result.type).toBe('FeatureCollection');
+            expect(result.features).toHaveLength(1);
+            expect(result.features[0].geometry.type).toBe('Point');
+        });
+    });
+
+    describe('convertFromUrl', () => {
+        it('fetches and converts GML from URL', async () => {
+            const gml32 = `
+                <gml:Point xmlns:gml="http://www.opengis.net/gml/3.2">
+                    <gml:pos>10 20</gml:pos>
+                </gml:Point>
+            `;
+
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                text: async () => gml32,
+            } as Response);
+
+            const parser = new GmlParser();
+            const result = await parser.convertFromUrl('https://example.com/data.gml', {
+                outputVersion: '2.1.2',
+            });
+
+            expect(global.fetch).toHaveBeenCalledWith('https://example.com/data.gml');
+            expect(result).toContain('gml:coordinates');
+            expect(result).toContain('10,20');
+        });
+
+        it('throws error when fetch fails during conversion', async () => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: false,
+                status: 500,
+                statusText: 'Internal Server Error',
+            } as Response);
+
+            const parser = new GmlParser();
+            await expect(parser.convertFromUrl('https://example.com/data.gml', {
+                outputVersion: '2.1.2',
+            })).rejects.toThrow('Failed to fetch GML from https://example.com/data.gml (500 Internal Server Error)');
+        });
+
+        it('converts with pretty print option', async () => {
+            const gmlXml = `
+                <gml:Point xmlns:gml="http://www.opengis.net/gml/3.2">
+                    <gml:pos>10 20</gml:pos>
+                </gml:Point>
+            `;
+
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                text: async () => gmlXml,
+            } as Response);
+
+            const parser = new GmlParser();
+            const result = await parser.convertFromUrl('https://example.com/data.gml', {
+                outputVersion: '2.1.2',
+                prettyPrint: true,
+            });
+
+            // Pretty printed XML should have newlines
+            expect(result.split('\n').length).toBeGreaterThan(1);
+        });
+    });
+});

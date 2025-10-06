@@ -58,12 +58,30 @@ export class GmlParser {
         return this.toGeoJson(gmlObject);
     }
 
+    async parseFromUrl(url: string): Promise<Geometry | Feature | FeatureCollection> {
+        const xml = await this.fetchXml(url);
+        return this.parse(xml);
+    }
+
     async convert(xml: string, options: GmlConvertOptions): Promise<string> {
         const { outputVersion, prettyPrint = false } = options;
         const doc = await parseXml(xml);
         const inputVersion = options.inputVersion || detectGmlVersion(doc);
         const gmlObject = this.parseGml(doc, inputVersion);
         return generateGml(gmlObject, outputVersion, prettyPrint);
+    }
+
+    async convertFromUrl(url: string, options: GmlConvertOptions): Promise<string> {
+        const xml = await this.fetchXml(url);
+        return this.convert(xml, options);
+    }
+
+    private async fetchXml(url: string): Promise<string> {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch GML from ${url} (${response.status} ${response.statusText})`);
+        }
+        return await response.text();
     }
 
     async convertGeometry(gmlObject: GmlGeometry | GmlFeature | GmlFeatureCollection, options: Pick<GmlConvertOptions, 'outputVersion' | 'prettyPrint'>): Promise<string> {

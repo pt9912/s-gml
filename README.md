@@ -45,6 +45,17 @@ console.log(geojson);
 // { type: 'Point', coordinates: [10, 20] }
 ```
 
+### GML von URL parsen
+```typescript
+const parser = new GmlParser();
+
+// WFS GetFeature Request
+const geojson = await parser.parseFromUrl(
+  'https://example.com/wfs?service=WFS&request=GetFeature&typeName=water_areas'
+);
+console.log(geojson.type); // 'FeatureCollection'
+```
+
 ### GML Envelope parsen
 ```typescript
 const envelope = await parser.parse(`
@@ -89,6 +100,23 @@ const surface = await parser.parse(`
 `);
 console.log(surface.type);
 // "MultiPolygon"
+```
+
+### GML Versionen konvertieren
+```typescript
+const parser = new GmlParser();
+
+// Lokale Konvertierung
+const gml32 = `<gml:Point xmlns:gml="http://www.opengis.net/gml/3.2"><gml:pos>10 20</gml:pos></gml:Point>`;
+const gml212 = await parser.convert(gml32, { outputVersion: '2.1.2', prettyPrint: true });
+console.log(gml212);
+// <gml:Point xmlns:gml="http://www.opengis.net/gml"><gml:coordinates>10,20</gml:coordinates></gml:Point>
+
+// Von URL konvertieren
+const converted = await parser.convertFromUrl('https://example.com/data.gml', {
+  outputVersion: '2.1.2',
+  prettyPrint: true
+});
 ```
 
 ### OWS Exception Reports behandeln
@@ -183,11 +211,13 @@ docker run --rm s-gml-cli validate https://example.com/data.gml --gml-version 3.
 ## 📖 API
 
 ### `GmlParser`
-| Methode                               | Beschreibung                            | Rückgabe                |
-| ------------------------------------- | --------------------------------------- | ----------------------- |
-| `parse(gml: string)`                  | Parsed GML zu GeoJSON/FeatureCollection | `Promise<GeoJSON>`      |
-| `convert(gml: string, options)`       | Konvertiert GML zwischen Versionen      | `Promise<string>` (XML) |
-| `convertGeometry(gmlObject, options)` | Konvertiert GML-Objekte zu XML          | `Promise<string>`       |
+| Methode                                | Beschreibung                            | Rückgabe                |
+| -------------------------------------- | --------------------------------------- | ----------------------- |
+| `parse(gml: string)`                   | Parsed GML zu GeoJSON/FeatureCollection | `Promise<GeoJSON>`      |
+| `parseFromUrl(url: string)`            | Lädt und parsed GML von URL             | `Promise<GeoJSON>`      |
+| `convert(gml: string, options)`        | Konvertiert GML zwischen Versionen      | `Promise<string>` (XML) |
+| `convertFromUrl(url: string, options)` | Lädt und konvertiert GML von URL        | `Promise<string>` (XML) |
+| `convertGeometry(gmlObject, options)`  | Konvertiert GML-Objekte zu XML          | `Promise<string>`       |
 
 **`GmlConvertOptions`**:
 ```typescript
