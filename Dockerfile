@@ -3,8 +3,9 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install libxml2-utils for xmllint and pnpm
+RUN apk add --no-cache libxml2-utils && \
+    corepack enable && corepack prepare pnpm@latest --activate
 
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --prod=false
@@ -22,8 +23,9 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Install pnpm für Runtime-Stage
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install libxml2-utils for xmllint and pnpm
+RUN apk add --no-cache libxml2-utils && \
+    corepack enable && corepack prepare pnpm@latest --activate
 
 # Kopiere nur notwendige Dateien
 COPY --from=builder /app/package.json ./
