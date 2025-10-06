@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2025-10-06
+
+### Added
+- Native xmllint support in Docker image for faster and more reliable XSD validation
+- WFS sample files for integration testing (test/gml/)
+- Repository URL in package.json
+
+### Changed
+- Validator now prefers native xmllint when available, falls back to WASM
+- Test mode uses WASM with custom fetcher for proper mocking
+
+### Fixed
+- Validator tests now respect custom XSD fetcher instead of using native xmllint
+- Parser ignores `gml:null` elements in boundedBy
+- Parser ignores underscore (_) properties to avoid internal metadata
+
 ## [1.1.2] - 2025-01-05
 
 ### Added
@@ -54,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI tool for GML operations
 - GeoJSON conversion
 
-[1.1.2]: https://github.com/yourusername/s-gml/compare/v1.1.1...v1.1.2
-[1.1.1]: https://github.com/yourusername/s-gml/compare/v1.1.0...v1.1.1
-[1.1.0]: https://github.com/yourusername/s-gml/releases/tag/v1.1.0
+[1.1.3]: https://github.com/pt9912/s-gml/compare/v1.1.2...v1.1.3
+[1.1.2]: https://github.com/pt9912/s-gml/compare/v1.1.1...v1.1.2
+[1.1.1]: https://github.com/pt9912/s-gml/compare/v1.1.0...v1.1.1
+[1.1.0]: https://github.com/pt9912/s-gml/releases/tag/v1.1.0
