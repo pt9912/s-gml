@@ -21,5 +21,18 @@ export default {
             tslib: 'tslib'  // Explizite Angabe von tslib
         })
     ],
-    external: ['fast-xml-parser', 'xmllint-wasm', 'xsd-validator', 'commander']
+    external: [
+        'fast-xml-parser',
+        'xmllint-wasm',
+        'xsd-validator',
+        'commander',
+        'node:child_process',
+        'node:util',
+        'node:fs/promises',
+        'node:os',
+        'node:path',
+        'node:http',
+        'node:https',
+        'node:url'
+    ]
 };

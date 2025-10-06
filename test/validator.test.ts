@@ -1,4 +1,4 @@
-import { validateGml, __setXsdFetcher, __clearXsdCache } from '../src/validator.js';
+import { validateGml, __setXsdFetcher, __clearXsdCache } from '../src/validator.browser.js';
 
 const SIMPLE_XSD = `<?xml version="1.0"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://example.com/schema" elementFormDefault="qualified">
@@ -72,7 +72,7 @@ describe('validateGml', () => {
     });
 
     it('tests internal loadXsd with custom fetcher', async () => {
-        const { __internal } = await import('../src/validator.js');
+        const { __internal } = await import('../src/validator.browser.js');
         __setXsdFetcher(async () => SIMPLE_XSD);
 
         const result = await __internal.loadXsd('http://test.com/schema.xsd');
@@ -80,7 +80,7 @@ describe('validateGml', () => {
     });
 
     it('tests internal loadXsd with caching', async () => {
-        const { __internal } = await import('../src/validator.js');
+        const { __internal } = await import('../src/validator.browser.js');
         let fetchCount = 0;
         __setXsdFetcher(async () => {
             fetchCount++;

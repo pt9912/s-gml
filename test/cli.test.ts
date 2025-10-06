@@ -9,7 +9,7 @@ jest.mock('node:fs', () => ({
 // Mock global fetch
 global.fetch = jest.fn();
 
-jest.mock('../src/validator.js', () => ({
+jest.mock('../src/validator.node.js', () => ({
     validateGml: jest.fn().mockResolvedValue(true),
 }));
 
