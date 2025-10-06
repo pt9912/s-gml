@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2025-10-06
+
+### Added
+- Browser-compatible validator (`validator.browser.ts`) using WASM and Fetch API
+- Node.js-specific validator (`validator.node.ts`) with native xmllint support
+- 12 new browser compatibility tests
+- Total test count: 175 tests (up from 163)
+
+### Changed
+- Split validator into browser and Node.js versions for better compatibility
+- npm package now exports browser-compatible validator by default
+- CLI tool uses Node.js validator with native xmllint
+- Rollup configs mark Node.js built-ins as external
+
+### Fixed
+- Browser compatibility: Fixed Vite/bundler errors with Node.js modules
+- Resolved "Module externalized for browser compatibility" errors
+- validator.browser.ts now uses Fetch API instead of Node.js http/https
+
 ## [1.1.3] - 2025-10-06
 
 ### Added
@@ -70,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI tool for GML operations
 - GeoJSON conversion
 
+[1.1.4]: https://github.com/pt9912/s-gml/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/pt9912/s-gml/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/pt9912/s-gml/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/pt9912/s-gml/compare/v1.1.0...v1.1.1

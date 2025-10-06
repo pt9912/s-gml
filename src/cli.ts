@@ -39,7 +39,7 @@ export function buildProgram(): Command {
     program
         .name('s-gml')
         .description('CLI tool for parsing, converting, and validating GML files')
-        .version('1.1.3', '-V, --version')
+        .version('1.1.4', '-V, --version')
         .option('--verbose', 'Show detailed error messages with stack traces');
 
     program

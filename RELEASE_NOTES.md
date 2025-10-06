@@ -1,40 +1,35 @@
-# Release Notes - v1.1.3
+# Release Notes - v1.1.4
 
 **Release Date:** 2025-10-06
 
 ## 🎉 Overview
 
-This release improves validation performance and reliability by adding native xmllint support in Docker, while maintaining backward compatibility with WASM-based validation. It also includes important parser fixes for handling WFS responses with null boundaries.
+This release adds full browser compatibility by splitting the validator into separate browser and Node.js versions. The npm package is now compatible with modern bundlers like Vite, Webpack, and esbuild, while the CLI tool retains native xmllint performance.
 
 ---
 
 ## ✨ Highlights
 
-### 🚀 Performance Improvements
+### 🌐 Browser Compatibility
 
-**Native xmllint Support:**
-- Docker images now include `libxml2-utils` for native xmllint validation
-- Significantly faster XSD validation compared to WASM fallback
-- More reliable handling of complex schema references
-- Automatic fallback to WASM when xmllint is not available
+**Validator Split:**
+- **`validator.browser.ts`** - WASM-only validation using Fetch API (browser-compatible)
+- **`validator.node.ts`** - Native xmllint support for Node.js/CLI (up to 6x faster)
+- npm package exports browser validator by default
+- CLI tool uses Node.js validator with full performance
 
-### 🧪 Testing Improvements
+**Fixed Issues:**
+- ✅ Resolved "Module externalized for browser compatibility" errors in Vite
+- ✅ No more Node.js built-in modules (child_process, fs, http) in browser bundles
+- ✅ Works with all modern bundlers (Vite, Webpack, Rollup, esbuild)
 
-**WFS Sample Files:**
-- Added real-world WFS response samples from OpenStreetMap
-- Integration tests with actual WFS FeatureCollection data
-- Better coverage of edge cases (null boundedBy, MultiPolygon features)
+### 🧪 Enhanced Testing
 
-### 🐛 Bug Fixes
-
-**Parser Enhancements:**
-- Fixed handling of `gml:null` elements in boundedBy
-- Removed internal underscore (_) properties from parsed features
-- Better handling of WFS responses with missing boundaries
-
-**Validator Improvements:**
-- Test mode now properly respects custom XSD fetchers for mocking
-- Native xmllint is skipped when custom fetcher is set (for tests)
+**Browser Compatibility Tests:**
+- 12 new tests ensuring browser compatibility
+- Static analysis: verifies no Node.js imports in browser code
+- Build verification: checks dist bundles for correct validator usage
+- **Total: 175 tests** (up from 163)
 
 ---
 
@@ -42,34 +37,47 @@ This release improves validation performance and reliability by adding native xm
 
 ### Added
 
-- Native xmllint support in Docker image (both builder and runtime stages)
-- WFS sample files in `test/gml/` directory:
-  - `wfs-3-f.xml` - Large WFS response with multiple features
-  - `wfs-4-f.xml` - WFS response with null boundedBy
-  - `wfs-5-f.xml` - WFS response with water area features
-- Repository URL in package.json for better npm metadata
+- **Browser-compatible validator** (`validator.browser.ts`)
+  - Uses xmllint-wasm for XSD validation
+  - Uses browser Fetch API for HTTP requests
+  - No Node.js dependencies
+
+- **Node.js-specific validator** (`validator.node.ts`)
+  - Native xmllint support (6x faster in Docker)
+  - Automatic fallback to WASM if xmllint not available
+  - Uses Node.js http/https modules
+
+- **Browser compatibility test suite** (`test/browser-compat.test.ts`)
+  - 12 tests for import verification
+  - Distribution build checks
+  - Export validation
 
 ### Changed
 
-- Validator strategy: prefer native xmllint when available, fall back to WASM
-- Test mode forces WASM usage for proper schema mocking
-- Updated .dockerignore to include test files for Docker builds
-- Enhanced .gitignore with local development directories (.claude/, .wfs/)
+- **index.ts**: Exports browser validator by default for npm package
+- **cli.ts**: Uses Node.js validator for CLI tool
+- **Rollup configs**: Mark Node.js built-ins as external
+  - `node:child_process`, `node:http`, `node:https`
+  - `node:fs/promises`, `node:os`, `node:path`, `node:util`
 
 ### Fixed
 
-- **Validator:** Custom XSD fetcher now properly bypasses native xmllint in tests
-- **Parser:** Ignores `gml:null` elements in boundedBy to prevent parsing errors
-- **Parser:** Filters out underscore (_) properties used for internal metadata
+- Browser compatibility errors with Vite/bundlers
+- "Module externalized for browser compatibility" warnings
+- Node.js modules being bundled in browser builds
 
 ---
 
-## 📊 Performance Impact
+## 📊 Test Coverage
 
-**Validation Speed (estimated):**
-- Native xmllint: ~10-50ms for typical GML documents
-- WASM fallback: ~100-300ms for the same documents
-- **Improvement:** Up to 6x faster validation in Docker environments
+```
+File                   | % Stmts | % Branch | % Funcs | % Lines
+-----------------------|---------|----------|---------|----------
+validator.browser.ts   |   70.73 |    26.31 |   83.33 |   69.23
+validator.node.ts      |   18.88 |        0 |       0 |   19.54
+```
+
+**Total:** 175 tests passing (10 test suites)
 
 ---
 
@@ -81,64 +89,32 @@ None - this release is fully backward compatible.
 
 ## 📝 Commit Summary
 
-This release includes 6 commits since v1.1.2:
+This release includes 3 commits since v1.1.3:
 
-1. **234278a** - fix: ensure validator tests use custom fetcher instead of native xmllint
-2. **cf21cca** - chore: update ignore files for test data and Claude directories
-3. **9d7e8b0** - feat: add native xmllint support to Docker image
-4. **2bd307e** - chore: bump version to 1.1.1 and add repository field
-5. **7aa96bc** - fix: handle null boundedBy elements and ignore underscore properties
-6. **666c73c** - test: add WFS sample files for integration testing
+1. **12b580d** - feat: split validator into browser and Node.js versions
+2. **a08ace6** - test: add browser compatibility tests
+3. **718c210** - merge: browser compatibility features into main
 
 ---
 
 ## 🚀 Migration Guide
 
-No migration needed - this is a drop-in replacement for v1.1.2.
+No migration needed - this is a drop-in replacement for v1.1.3.
 
-### Docker Users
+### For npm Package Users
 
-If you're using Docker, you'll automatically benefit from native xmllint validation. No changes required.
+The package now works in browsers! Use it with any bundler:
 
-### npm Users
+```typescript
+import { validateGml } from '@npm9912/s-gml';
 
-The package continues to work with WASM-based validation. For better performance, consider installing `libxml2-utils` on your system:
-
-**Ubuntu/Debian:**
-```bash
-sudo apt-get install libxml2-utils
+// Works in browser with Vite, Webpack, etc.
+const isValid = await validateGml(gmlXml, '3.2');
 ```
 
-**Alpine:**
-```bash
-apk add --no-cache libxml2-utils
-```
+### For CLI Users
 
-**macOS:**
-```bash
-brew install libxml2
-```
-
----
-
-## 🧪 Testing
-
-All 163 tests pass successfully:
-- 9 test suites ✅
-- 163 tests ✅
-- Coverage: 88.53% statements, 77.18% branches
-
----
-
-## 📦 Docker Image
-
-Build the updated Docker image:
-
-```bash
-docker build -t s-gml-cli .
-```
-
-The image now includes native xmllint for fast validation:
+No changes required. The CLI automatically uses the faster Node.js validator:
 
 ```bash
 docker run --rm -v $(pwd):/data s-gml-cli validate /data/input.gml --gml-version 3.2
@@ -146,9 +122,42 @@ docker run --rm -v $(pwd):/data s-gml-cli validate /data/input.gml --gml-version
 
 ---
 
+## 🧪 Testing
+
+All tests pass successfully:
+
+```bash
+pnpm test
+# Test Suites: 10 passed, 10 total
+# Tests:       175 passed, 175 total
+```
+
+Browser compatibility verified:
+- ✅ No Node.js imports in validator.browser.ts
+- ✅ Fetch API used for HTTP requests
+- ✅ dist/index.js contains browser validator
+- ✅ dist/cli.js contains Node.js validator
+
+---
+
+## 📦 Installation
+
+```bash
+npm install @npm9912/s-gml@1.1.4
+```
+
+## 🐳 Docker
+
+```bash
+docker build -t s-gml-cli .
+docker run --rm -v $(pwd):/data s-gml-cli validate /data/input.gml --gml-version 3.2
+```
+
+---
+
 ## 🙏 Acknowledgments
 
-This release was developed with assistance from Claude Code to ensure optimal performance and test coverage.
+This release was developed with assistance from Claude Code to ensure optimal browser compatibility and performance.
 
 ---
 
@@ -164,11 +173,11 @@ This release was developed with assistance from Claude Code to ensure optimal pe
 ## 🔜 What's Next
 
 Future improvements may include:
+- Further coverage improvements for validator.node.ts
 - Additional WFS version support
-- Enhanced schema catalog for complex GML applications
 - Performance optimizations for large FeatureCollections
-- Support for GML 3.1.1
+- Enhanced schema catalog for complex GML applications
 
 ---
 
-**Full Changelog:** [v1.1.2...v1.1.3](https://github.com/pt9912/s-gml/compare/v1.1.2...v1.1.3)
+**Full Changelog:** [v1.1.3...v1.1.4](https://github.com/pt9912/s-gml/compare/v1.1.3...v1.1.4)
