@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { GmlParser, validateGml, OwsExceptionError } from './index.js';
+import { GmlParser, OwsExceptionError } from './index.js';
+import { validateGml } from './validator.node.js';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { Command } from 'commander';
 
