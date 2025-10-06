@@ -67,8 +67,39 @@ export function detectGmlVersion(doc: any): GmlVersion {
     if (namespace.includes('3.2')) return '3.2';
     if (namespace.includes('3.1')) return '3.1';
     if (namespace.includes('3.0')) return '3.0';
-    if (namespace === 'http://www.opengis.net/gml') return '2.1.2';
+    if (namespace.includes('2.1.2')) return '2.1.2';
+
+    // For namespace without version (http://www.opengis.net/gml), detect by content
+    if (namespace === 'http://www.opengis.net/gml') {
+        // Check for GML 2.1.2 specific elements
+        if (hasGml212Elements(doc)) return '2.1.2';
+        // Default to GML 3.2 for WFS 1.1+ (which uses unversioned namespace)
+        return '3.2';
+    }
+
     return '3.2';
+}
+
+function hasGml212Elements(node: any): boolean {
+    if (!node || typeof node !== 'object') return false;
+
+    for (const [key, value] of Object.entries(node)) {
+        // GML 2.1.2 specific elements
+        if (key === 'gml:coordinates' || key === 'gml:outerBoundaryIs' || key === 'gml:innerBoundaryIs') {
+            return true;
+        }
+
+        // Recursively check children
+        if (Array.isArray(value)) {
+            for (const item of value) {
+                if (hasGml212Elements(item)) return true;
+            }
+        } else if (typeof value === 'object') {
+            if (hasGml212Elements(value)) return true;
+        }
+    }
+
+    return false;
 }
 
 function findGmlNamespace(node: any): string | undefined {

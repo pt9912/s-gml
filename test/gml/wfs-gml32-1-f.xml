@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wfs:FeatureCollection xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:osm="http://openstreemap.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" numberMatched="unknown" numberReturned="2000" timeStamp="2025-10-06T07:05:22.042Z" xsi:schemaLocation="http://www.opengis.net/wfs/2.0 https://ahocevar.com/geoserver/schemas/wfs/2.0/wfs.xsd http://openstreemap.org https://ahocevar.com/geoserver/wfs?service=WFS&amp;version=1.1.0&amp;request=DescribeFeatureType&amp;typeName=osm%3Awater_areas http://www.opengis.net/gml/3.2 https://ahocevar.com/geoserver/schemas/gml/3.2.1/gml.xsd">
+  <wfs:member>
+    <osm:water_areas gml:id="water_areas.6">
+      <osm:the_geom>
+        <gml:MultiSurface srsName="http://www.opengis.net/gml/srs/epsg.xml#4326" srsDimension="2" gml:id="water_areas.6.the_geom">
+          <gml:surfaceMember>
+            <gml:Polygon gml:id="water_areas.6.the_geom.1">
+              <gml:exterior>
+                <gml:LinearRing>
+                  <gml:posList>-79.66001602 42.95908067 -79.659851 42.95961009 -79.6591787 42.95934429 -79.65951764 42.95891855 -79.66001602 42.95908067</gml:posList>
+                </gml:LinearRing>
+              </gml:exterior>
+            </gml:Polygon>
+          </gml:surfaceMember>
+        </gml:MultiSurface>
+      </osm:the_geom>
+      <osm:osm_id>56233052</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </wfs:member>
+  <wfs:member>
+    <osm:water_areas gml:id="water_areas.8">
+      <osm:the_geom>
+        <gml:MultiSurface srsName="http://www.opengis.net/gml/srs/epsg.xml#4326" srsDimension="2" gml:id="water_areas.8.the_geom">
+          <gml:surfaceMember>
+            <gml:Polygon gml:id="water_areas.8.the_geom.1">
+              <gml:exterior>
+                <gml:LinearRing>
+                  <gml:posList>-80.72509653 44.33243224 -80.72435192 44.33306985 -80.72418115 44.33293337 -80.72445334 44.33255297 -80.72465133 44.33228695 -80.72481697 44.33224178 -80.72508036 44.33228483 -80.72509653 44.33243224</gml:posList>
+                </gml:LinearRing>
+              </gml:exterior>
+            </gml:Polygon>
+          </gml:surfaceMember>
+        </gml:MultiSurface>
+      </osm:the_geom>
+      <osm:osm_id>60851250</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </wfs:member>
+  <wfs:member>
+    <osm:water_areas gml:id="water_areas.14">
+      <osm:the_geom>
+        <gml:MultiSurface srsName="http://www.opengis.net/gml/srs/epsg.xml#4326" srsDimension="2" gml:id="water_areas.14.the_geom">
+          <gml:surfaceMember>
+            <gml:Polygon gml:id="water_areas.14.the_geom.1">
+              <gml:exterior>
+                <gml:LinearRing>
+                  <gml:posList>-80.84640143 44.25466686 -80.84634933 44.25471255 -80.84587044 44.25471608 -80.84578016 44.25468327 -80.84573704 44.25454075 -80.84574602 44.25435249 -80.84587843 44.25421126 -80.84600501 44.25416867 -80.84627639 44.25418565 -80.84635463 44.25421647 -80.84639802 44.25427779 -80.84640143 44.25466686</gml:posList>
+                </gml:LinearRing>
+              </gml:exterior>
+            </gml:Polygon>
+          </gml:surfaceMember>
+        </gml:MultiSurface>
+      </osm:the_geom>
+      <osm:osm_id>60850937</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </wfs:member>
+  <wfs:member>
+    <osm:water_areas gml:id="water_areas.23">
+      <osm:the_geom>
+        <gml:MultiSurface srsName="http://www.opengis.net/gml/srs/epsg.xml#4326" srsDimension="2" gml:id="water_areas.23.the_geom">
+          <gml:surfaceMember>
+            <gml:Polygon gml:id="water_areas.23.the_geom.1">
+              <gml:exterior>
+                <gml:LinearRing>
+                  <gml:posList>-79.90367901 43.45183446 -79.9035731 43.45204158 -79.90349477 43.45209094 -79.90311702 43.45203349 -79.90259358 43.45200434 -79.90256941 43.45192785 -79.90262115 43.45184666 -79.90283576 43.45168577 -79.90298165 43.45165728 -79.90314236 43.45165858 -79.90330352 43.45169595 -79.90367901 43.45183446</gml:posList>
+                </gml:LinearRing>
+              </gml:exterior>
+            </gml:Polygon>
+          </gml:surfaceMember>
+        </gml:MultiSurface>
+      </osm:the_geom>
+      <osm:osm_id>76963679</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </wfs:member>
+  <wfs:member>
+    <osm:water_areas gml:id="water_areas.26">
+      <osm:the_geom>
+        <gml:MultiSurface srsName="http://www.opengis.net/gml/srs/epsg.xml#4326" srsDimension="2" gml:id="water_areas.26.the_geom">
+          <gml:surfaceMember>
+            <gml:Polygon gml:id="water_areas.26.the_geom.1">
+              <gml:exterior>
+                <gml:LinearRing>
+                  <gml:posList>-79.86002008 44.14260885 -79.85976891 44.14271909 -79.85897471 44.14219957 -79.85938767 44.14194545 -79.86002008 44.14260885</gml:posList>
+                </gml:LinearRing>
+              </gml:exterior>
+            </gml:Polygon>
+          </gml:surfaceMember>
+        </gml:MultiSurface>
+      </osm:the_geom>
+      <osm:osm_id>55607372</osm:osm_id>
+      <osm:natural>natural</osm:natural>
+      <osm:landuse>reservoir</osm:landuse>
+    </osm:water_areas>
+  </wfs:member>
+</wfs:FeatureCollection>

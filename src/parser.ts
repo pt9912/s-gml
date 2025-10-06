@@ -329,17 +329,33 @@ export class GmlParser {
     }
 
     private parseFeatureCollection(element: any, version: GmlVersion): GmlFeatureCollection {
+        const features: GmlFeature[] = [];
+
+        // Support both gml:featureMember and wfs:member
         const featureMembers = this.ensureArray(element['gml:featureMember']);
-        const features: GmlFeature[] = featureMembers.map(member => this.parseFeatureMember(member, version));
+        featureMembers.forEach(member => {
+            features.push(this.parseFeatureMember(member, version));
+        });
+
+        const wfsMembers = this.ensureArray(element['wfs:member']);
+        wfsMembers.forEach(member => {
+            features.push(this.parseFeatureMember(member, version));
+        });
 
         const featureMembersContainer = element['gml:featureMembers'];
         if (featureMembersContainer) {
             const containers = this.ensureArray(featureMembersContainer);
             containers.forEach(container => {
                 for (const [key, value] of Object.entries(container)) {
-                    if (key.startsWith('gml:')) continue;
-                    const feature = this.parseFeatureElement(key, value as Record<string, any>, version);
-                    features.push(feature);
+                    // Skip GML namespace keys and internal metadata keys
+                    if (key.startsWith('gml:') || key === '$' || key === '_' || key === '#name') continue;
+
+                    // Handle array of features (common in gml:featureMembers)
+                    const featureElements = this.ensureArray(value);
+                    featureElements.forEach(featureElement => {
+                        const feature = this.parseFeatureElement(key, featureElement as Record<string, any>, version);
+                        features.push(feature);
+                    });
                 }
             });
         }

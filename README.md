@@ -10,16 +10,16 @@ inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-Unterstützung und Dock
 ---
 ## ✨ Features
 
-| Feature                    | Beschreibung                                        |
-| -------------------------- | --------------------------------------------------- |
-| **GML → GeoJSON**          | Parsen aller GML-Elemente nach GeoJSON              |
-| **Versionen konvertieren** | GML 2.1.2 ↔ 3.2 (inkl. FeatureCollections)          |
-| **WFS-Unterstützung**      | Parsen von WFS-FeatureCollections                   |
-| **URL-Unterstützung**      | Direktes Laden von GML-Daten aus URLs               |
+| Feature                    | Beschreibung                                          |
+| -------------------------- | ----------------------------------------------------- |
+| **GML → GeoJSON**          | Parsen aller GML-Elemente nach GeoJSON                |
+| **Versionen konvertieren** | GML 2.1.2 ↔ 3.2 (inkl. FeatureCollections)            |
+| **WFS-Unterstützung**      | Parsen von WFS-FeatureCollections                     |
+| **URL-Unterstützung**      | Direktes Laden von GML-Daten aus URLs                 |
 | **OWS Exception Handling** | Automatische Erkennung und Behandlung von WFS-Fehlern |
-| **XSD-Validierung**        | Prüfung gegen offizielle GML-Schemata               |
-| **Neue GML-Elemente**      | `Envelope`, `Box`, `Curve`, `Surface`, `LinearRing` |
-| **Docker-CLI**             | Bereit als Container-Image für Batch-Verarbeitung   |
+| **XSD-Validierung**        | Prüfung gegen offizielle GML-Schemata                 |
+| **Neue GML-Elemente**      | `Envelope`, `Box`, `Curve`, `Surface`, `LinearRing`   |
+| **Docker-CLI**             | Bereit als Container-Image für Batch-Verarbeitung     |
 
 ---
 ## 📦 Installation
@@ -145,7 +145,7 @@ docker build -t s-gml-cli .
 
 **Lokale Datei:**
 ```bash
-docker run --rm -v $(pwd):/data s-gml-cli parse /data/input.gml --output /data/output.geojson
+docker run --rm -v $(pwd)/test/gml:/data s-gml-cli parse /data/wfs-gml3-1-f.xml --verbose --output /data/output.geojson
 ```
 
 **Von URL:**
