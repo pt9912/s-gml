@@ -229,6 +229,66 @@ docker run --rm s-gml-cli validate https://example.com/data.gml --gml-version 3.
 }
 ```
 
+### Custom Builder erstellen
+
+Du kannst eigene Builder implementieren, um GML in andere Formate als GeoJSON zu konvertieren:
+
+```typescript
+import { Builder, GmlPoint, GmlLineString, GmlPolygon, GmlFeature, GmlFeatureCollection } from '@npm9912/s-gml';
+
+class MyCustomBuilder implements Builder {
+  buildPoint(gml: GmlPoint) {
+    return {
+      type: 'CustomPoint',
+      x: gml.coordinates[0],
+      y: gml.coordinates[1]
+    };
+  }
+
+  buildLineString(gml: GmlLineString) {
+    return {
+      type: 'CustomLineString',
+      points: gml.coordinates
+    };
+  }
+
+  buildPolygon(gml: GmlPolygon) {
+    return {
+      type: 'CustomPolygon',
+      rings: gml.coordinates
+    };
+  }
+
+  // ... alle anderen Builder-Methoden implementieren
+  // (siehe Builder Interface in types.ts)
+}
+
+// Builder direkt im Constructor übergeben
+const parser = new GmlParser(new MyCustomBuilder());
+
+const result = await parser.parse(gmlXml);
+// Gibt jetzt dein Custom Format zurück
+```
+
+**Builder Interface:**
+```typescript
+interface Builder<TGeometry, TFeature, TFeatureCollection> {
+  buildPoint(gml: GmlPoint): TGeometry;
+  buildLineString(gml: GmlLineString): TGeometry;
+  buildPolygon(gml: GmlPolygon): TGeometry;
+  buildMultiPoint(gml: GmlMultiPoint): TGeometry;
+  buildMultiLineString(gml: GmlMultiLineString): TGeometry;
+  buildMultiPolygon(gml: GmlMultiPolygon): TGeometry;
+  buildLinearRing(gml: GmlLinearRing): TGeometry;
+  buildEnvelope(gml: GmlEnvelope): TFeature;
+  buildBox(gml: GmlBox): TFeature;
+  buildCurve(gml: GmlCurve): TGeometry;
+  buildSurface(gml: GmlSurface): TGeometry;
+  buildFeature(gml: GmlFeature): TFeature;
+  buildFeatureCollection(gml: GmlFeatureCollection): TFeatureCollection;
+}
+```
+
 ### `validateGml(gml: string, version: string)`
 → `Promise<boolean>`
 

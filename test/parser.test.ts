@@ -1316,3 +1316,75 @@ describe('GmlParser URL Methods', () => {
         });
     });
 });
+
+describe('GmlParser Custom Builder', () => {
+    it('accepts custom builder in constructor', async () => {
+        const customBuilder = {
+            buildPoint: jest.fn((gml) => ({
+                type: 'CustomPoint',
+                x: gml.coordinates[0],
+                y: gml.coordinates[1],
+            })),
+            buildLineString: jest.fn(),
+            buildPolygon: jest.fn(),
+            buildMultiPoint: jest.fn(),
+            buildMultiLineString: jest.fn(),
+            buildMultiPolygon: jest.fn(),
+            buildLinearRing: jest.fn(),
+            buildEnvelope: jest.fn(),
+            buildBox: jest.fn(),
+            buildCurve: jest.fn(),
+            buildSurface: jest.fn(),
+            buildFeature: jest.fn(),
+            buildFeatureCollection: jest.fn(),
+        };
+
+        const parser = new GmlParser(customBuilder as any);
+        const gml = `
+            <gml:Point xmlns:gml="http://www.opengis.net/gml/3.2">
+                <gml:pos>10 20</gml:pos>
+            </gml:Point>
+        `;
+
+        const result = await parser.parse(gml);
+
+        expect(customBuilder.buildPoint).toHaveBeenCalled();
+        expect(result).toEqual({
+            type: 'CustomPoint',
+            x: 10,
+            y: 20,
+        });
+    });
+
+    it('uses default GeoJSON builder when no builder specified', async () => {
+        const parser = new GmlParser(); // Default to 'geojson'
+        const gml = `
+            <gml:Point xmlns:gml="http://www.opengis.net/gml/3.2">
+                <gml:pos>10 20</gml:pos>
+            </gml:Point>
+        `;
+
+        const result = await parser.parse(gml);
+
+        expect(result).toEqual({
+            type: 'Point',
+            coordinates: [10, 20],
+        });
+    });
+
+    it('accepts format string in constructor', async () => {
+        const parser = new GmlParser('geojson');
+        const gml = `
+            <gml:Point xmlns:gml="http://www.opengis.net/gml/3.2">
+                <gml:pos>10 20</gml:pos>
+            </gml:Point>
+        `;
+
+        const result = await parser.parse(gml);
+
+        expect(result).toEqual({
+            type: 'Point',
+            coordinates: [10, 20],
+        });
+    });
+});

@@ -47,8 +47,8 @@ const GEOMETRY_ELEMENT_NAMES = new Set([
 export class GmlParser {
     private builder: Builder;
 
-    constructor(targetFormat: string = 'geojson') {
-        this.builder = getBuilder(targetFormat);
+    constructor(targetFormat: string | Builder = 'geojson') {
+        this.builder = typeof targetFormat === 'string' ? getBuilder(targetFormat) : targetFormat;
     }
 
     async parse(xml: string): Promise<Geometry | Feature | FeatureCollection> {
