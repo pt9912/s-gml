@@ -1,36 +1,66 @@
-# Release Notes - v1.2.0
+# Release Notes - v1.3.0
 
 **Release Date:** 2025-10-06
 
 ## 🎉 Overview
 
-This release significantly enhances WFS (Web Feature Service) support with comprehensive integration tests covering WFS 1.0, 1.1, and 2.0. Improved GML version detection, better feature parsing, and support for various WFS-specific elements ensure robust handling of real-world WFS responses.
+This release adds powerful new capabilities for working with remote GML data and custom output formats. The parser now supports direct URL parsing for WFS requests, and developers can implement custom builders to convert GML into any format beyond GeoJSON.
 
 ---
 
 ## ✨ Highlights
 
-### 🗺️ WFS Integration Tests
+### 🌐 URL Parsing Support
 
-**28 new comprehensive tests:**
-- **WFS 2.0 with GML 3.2** - 7 tests for `wfs:member` parsing
-- **WFS 1.1 with GML 3.0** - 5 tests for `gml:featureMembers` handling
-- **WFS 1.0 with GML 2.1.2** - 9 tests for legacy coordinate format
-- **Version comparison** - 4 tests ensuring consistency across WFS versions
-- **Real-world data integrity** - 3 tests with OpenStreetMap water_areas features
+**Direct parsing from URLs:**
+```typescript
+const parser = new GmlParser();
 
-**Real-world WFS Sample Files:**
-- `wfs-gml32-1-f.xml` - WFS 2.0 response with GML 3.2
-- `wfs-gml3-1-f.xml` - WFS 1.1 response with GML 3.0
-- `wfs-3-f.xml` - WFS 1.0 response with GML 2.1.2
+// Parse WFS GetFeature request
+const geojson = await parser.parseFromUrl(
+  'https://example.com/wfs?service=WFS&request=GetFeature&typeName=water_areas'
+);
 
-### 🔍 Enhanced GML Version Detection
+// Convert GML from URL
+const gml212 = await parser.convertFromUrl('https://example.com/data.gml', {
+  outputVersion: '2.1.2',
+  prettyPrint: true
+});
+```
 
-**Content-based Detection:**
-- Intelligently detects GML 2.1.2 vs 3.x for unversioned namespace
-- Checks for GML 2.1.2 specific elements (`gml:coordinates`, `outerBoundaryIs`, `innerBoundaryIs`)
-- Defaults to GML 3.2 for modern WFS services using unversioned namespace
-- **Total: 203 tests** (up from 175)
+**Features:**
+- ✅ Automatic HTTP/HTTPS fetching with Fetch API
+- ✅ Error handling for failed requests (404, 500, etc.)
+- ✅ Works with WFS GetFeature requests
+- ✅ Supports all parser methods (parse & convert)
+
+### 🔧 Custom Builder Support
+
+**Implement your own output formats:**
+```typescript
+class MyCustomBuilder implements Builder {
+  buildPoint(gml: GmlPoint) {
+    return {
+      type: 'CustomPoint',
+      x: gml.coordinates[0],
+      y: gml.coordinates[1]
+    };
+  }
+  // ... implement all 13 Builder methods
+}
+
+const parser = new GmlParser(new MyCustomBuilder());
+const result = await parser.parse(gmlXml);
+// Returns your custom format instead of GeoJSON!
+```
+
+**Use Cases:**
+- Convert GML to proprietary formats
+- Direct database object mapping
+- Custom spatial data structures
+- Legacy system integration
+
+**Total: 212 tests** (up from 203)
 
 ---
 
@@ -38,42 +68,48 @@ This release significantly enhances WFS (Web Feature Service) support with compr
 
 ### Added
 
-- **WFS Integration Test Suite** (`test/wfs-integration.test.ts`)
-  - 28 comprehensive tests covering WFS 1.0, 1.1, and 2.0
-  - Tests for all WFS member element types
-  - Real-world OpenStreetMap water_areas feature testing
-  - Coordinate validation and geometry integrity checks
+- **URL Parsing Methods** (`src/parser.ts`)
+  - `parseFromUrl(url: string)` - Fetch and parse GML from URLs
+  - `convertFromUrl(url: string, options)` - Fetch and convert GML from URLs
+  - `fetchXml(url)` private method with error handling
+  - 6 comprehensive tests for URL methods
 
-- **WFS 2.0 Support**
-  - `wfs:member` element parsing
-  - Proper handling of WFS 2.0 FeatureCollection structure
+- **Custom Builder Support**
+  - `GmlParser` constructor now accepts `Builder` objects directly
+  - Constructor signature: `constructor(targetFormat: string | Builder = 'geojson')`
+  - Full Builder interface exported from main module
+  - 3 tests for custom builder functionality
 
-- **GML 2.1.2 Feature ID Support**
-  - `fid` attribute support alongside `gml:id`
-  - Proper feature identification in WFS 1.0 responses
-
-- **Content-based GML Version Detection**
-  - `hasGml212Elements()` function for detecting GML 2.1.2 features
-  - Fallback detection for unversioned GML namespace
+- **Documentation**
+  - Extensive Custom Builder section in README with complete example
+  - URL parsing examples for both parse and convert methods
+  - Builder interface documentation with all 13 required methods
+  - Usage examples for WFS GetFeature requests
 
 ### Changed
 
-- **Improved GML Version Detection** (`src/utils.ts`)
-  - Added content-based detection for `http://www.opengis.net/gml` namespace
-  - Checks for GML 2.1.2 specific elements before defaulting to 3.2
-  - More accurate version detection for legacy WFS services
+- **GmlParser Constructor** (`src/parser.ts`)
+  - Now accepts both string format names and Builder objects
+  - Type signature: `string | Builder` with 'geojson' as default
+  - Backwards compatible with existing code
 
-- **Enhanced Feature Parsing** (`src/parser.ts`)
-  - Support for both `gml:featureMember` and `wfs:member` elements
-  - Improved `gml:featureMembers` array handling
-  - Better handling of WFS 1.1 feature collections
+- **README.md**
+  - Added "GML von URL parsen" section
+  - Added "GML Versionen konvertieren" section with URL example
+  - Added "Custom Builder erstellen" section with full implementation
+  - Updated API table with new methods
 
-### Fixed
+### Examples
 
-- WFS 2.0 feature extraction from `wfs:member` elements
-- WFS 1.1 array handling in `gml:featureMembers` containers
-- GML version detection for unversioned namespace
-- MultiPoint and MultiLineString validation for empty member elements
+**URL Parsing:**
+```typescript
+const geojson = await parser.parseFromUrl('https://example.com/wfs?...');
+```
+
+**Custom Builder:**
+```typescript
+const parser = new GmlParser(new MyCustomBuilder());
+```
 
 ---
 
@@ -81,16 +117,18 @@ This release significantly enhances WFS (Web Feature Service) support with compr
 
 ```
 Test Suites: 11 passed, 11 total
-Tests:       203 passed, 203 total
+Tests:       212 passed, 212 total ✓
 ```
 
-**New Test Files:**
-- `test/wfs-integration.test.ts` - 28 WFS integration tests
+**New Tests:**
+- 6 URL parsing tests (`parseFromUrl`, `convertFromUrl`)
+- 3 custom builder tests (constructor variants)
+- **Total increase:** +9 tests
 
-**Sample Files:**
-- `test/gml/wfs-gml32-1-f.xml` - WFS 2.0 with GML 3.2 (1 feature)
-- `test/gml/wfs-gml3-1-f.xml` - WFS 1.1 with GML 3.0 (1 feature)
-- `test/gml/wfs-3-f.xml` - WFS 1.0 with GML 2.1.2 (30 features)
+**Test Distribution:**
+- URL Methods: 6 tests
+- Custom Builder: 3 tests
+- Existing tests: 203 tests (all passing)
 
 ---
 
@@ -98,75 +136,75 @@ Tests:       203 passed, 203 total
 
 None - this release is fully backward compatible.
 
+The `GmlParser` constructor still accepts string format names ('geojson'), and additionally accepts Builder objects.
+
 ---
 
 ## 📝 Commit Summary
 
-This release includes 3 commits since v1.1.4:
+This release includes 3 commits since v1.2.0:
 
-1. **fa6e664** - feat: add WFS integration tests and improve WFS parsing
-2. **c995952** - feat: add WFS 1.0 / GML 2.1.2 integration tests
-3. **7dcbc73** - fix: improve validation for empty MultiPoint and MultiLineString
+1. **64ccca9** - feat: add URL parsing support to GmlParser
+2. **4f6c3c2** - chore: format README badges
+3. **9bc94e5** - feat: add custom Builder support with documentation
 
 ---
 
 ## 🚀 Migration Guide
 
-No migration needed - this is a drop-in replacement for v1.1.4.
+No migration needed - this is a drop-in replacement for v1.2.0.
 
-### WFS Parsing Improvements
+### URL Parsing
 
-The parser now automatically handles:
-
-**WFS 2.0 (`wfs:member`):**
+**Parse GML from remote URLs:**
 ```typescript
 import { GmlParser } from '@npm9912/s-gml';
 
 const parser = new GmlParser();
-const result = await parser.parse(wfs20Xml);
-// Correctly extracts features from wfs:member elements
+const geojson = await parser.parseFromUrl('https://example.com/wfs?service=WFS&request=GetFeature&typeName=water_areas');
 ```
 
-**WFS 1.0 (`fid` attributes):**
-```typescript
-// Feature IDs now correctly extracted from fid attribute
-const feature = result.features[0];
-console.log(feature.id); // "water_areas.230"
-```
+### Custom Builder
 
-**Automatic Version Detection:**
+**Implement custom output formats:**
 ```typescript
-// GML version now auto-detected for unversioned namespace
-// Checks for GML 2.1.2 elements, defaults to 3.2
-const result = await parser.parse(wfsXml);
-console.log(result.version); // "2.1.2" or "3.2"
+import { GmlParser, Builder } from '@npm9912/s-gml';
+
+class MyBuilder implements Builder {
+  buildPoint(gml) { return { type: 'MyPoint', x: gml.coordinates[0], y: gml.coordinates[1] }; }
+  // ... implement all 13 Builder methods
+}
+
+const parser = new GmlParser(new MyBuilder());
+const result = await parser.parse(gmlXml);
+// Returns your custom format!
 ```
 
 ---
 
 ## 🧪 Testing
 
-All 203 tests pass successfully:
+All 212 tests pass successfully:
 
 ```bash
 pnpm test
 # Test Suites: 11 passed, 11 total
-# Tests:       203 passed, 203 total
+# Tests:       212 passed, 212 total
 ```
 
-WFS integration verified:
-- ✅ WFS 2.0 with `wfs:member` elements
-- ✅ WFS 1.1 with `gml:featureMembers` arrays
-- ✅ WFS 1.0 with GML 2.1.2 coordinates
-- ✅ Feature ID extraction from `fid` attribute
-- ✅ Content-based GML version detection
+New test coverage:
+- ✅ URL parsing methods (6 tests)
+- ✅ Custom builder support (3 tests)
+- ✅ HTTP error handling
+- ✅ WFS URL requests
+- ✅ Custom output formats
 
 ---
 
 ## 📦 Installation
 
 ```bash
-npm install @npm9912/s-gml@1.2.0
+npm install @npm9912/s-gml@1.3.0
 ```
 
 ## 🐳 Docker
@@ -196,11 +234,12 @@ This release was developed with assistance from Claude Code to ensure comprehens
 ## 🔜 What's Next
 
 Future improvements may include:
-- Additional WFS 2.0 response format support
+- Additional WFS response format support
 - Performance optimizations for large FeatureCollections
 - Enhanced CRS transformation support
 - OGC API - Features compatibility
+- Streaming parser for very large GML files
 
 ---
 
-**Full Changelog:** [v1.1.4...v1.2.0](https://github.com/pt9912/s-gml/compare/v1.1.4...v1.2.0)
+**Full Changelog:** [v1.2.0...v1.3.0](https://github.com/pt9912/s-gml/compare/v1.2.0...v1.3.0)

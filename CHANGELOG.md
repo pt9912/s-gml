@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-10-06
+
+### Added
+- **URL Parsing Support**
+  - `parseFromUrl(url)` method for direct GML/WFS parsing from URLs
+  - `convertFromUrl(url, options)` method for URL-based GML conversion
+  - 6 comprehensive tests for URL methods
+  - Automatic error handling for failed HTTP requests
+
+- **Custom Builder Support**
+  - `GmlParser` constructor now accepts custom `Builder` objects
+  - Support for implementing custom output formats beyond GeoJSON
+  - Full `Builder` interface documentation in README
+  - 3 tests for custom builder functionality
+
+### Changed
+- `GmlParser` constructor signature: `constructor(targetFormat: string | Builder = 'geojson')`
+- Enhanced README with extensive examples for URL parsing and custom builders
+- Total test count: 212 tests (up from 203)
+
+### Examples
+```typescript
+// URL Parsing
+const parser = new GmlParser();
+const geojson = await parser.parseFromUrl('https://example.com/wfs?...');
+
+// Custom Builder
+class MyBuilder implements Builder { ... }
+const parser = new GmlParser(new MyBuilder());
+```
+
 ## [1.2.0] - 2025-10-06
 
 ### Added
@@ -116,6 +147,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI tool for GML operations
 - GeoJSON conversion
 
+[1.3.0]: https://github.com/pt9912/s-gml/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/pt9912/s-gml/compare/v1.1.4...v1.2.0
 [1.1.4]: https://github.com/pt9912/s-gml/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/pt9912/s-gml/compare/v1.1.2...v1.1.3
