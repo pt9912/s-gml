@@ -17,6 +17,7 @@ inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-/WCS-Unterstützung und
 | **Coverage-Unterstützung** | RectifiedGridCoverage, GridCoverage, MultiPointCoverage + GeoTIFF-Metadaten |
 | **JSON-Coverage-Formate**  | CIS JSON + CoverageJSON (beide OGC-Standards)         |
 | **WCS 2.0 XML Generator**  | Coverage → WCS 2.0 XML mit Multi-band RangeType       |
+| **WCS GetCoverage Builder** | Request-URLs und XML für WCS GetCoverage (2.0/1.1/1.0) |
 | **Time-series Coverage**   | Temporale Achse mit ISO 8601 Timestamps & Auflösung   |
 | **Versionen konvertieren** | GML 2.1.2 ↔ 3.2 (inkl. FeatureCollections)            |
 | **WFS-Unterstützung**      | Parsen von WFS-FeatureCollections                     |
@@ -364,6 +365,150 @@ const landsatSeries = {
 const landsatXml = generateCoverageXml(landsatSeries, true);
 ```
 
+### WCS GetCoverage Requests generieren
+```typescript
+import { WcsRequestBuilder, buildWcsGetCoverageUrl, buildWcsGetCoverageXml } from '@npm9912/s-gml';
+
+// 1. GET Request URL generieren
+const builder = new WcsRequestBuilder('https://example.com/wcs', '2.0.1');
+
+// Einfache GetCoverage Anfrage
+const url = builder.buildGetCoverageUrl({
+  coverageId: 'MY_COVERAGE',
+  format: 'image/tiff'
+});
+console.log(url);
+// https://example.com/wcs?service=WCS&version=2.0.1&request=GetCoverage&coverageId=MY_COVERAGE&format=image/tiff
+
+// Mit räumlichem Subsetting (Bounding Box)
+const urlSubset = builder.buildGetCoverageUrl({
+  coverageId: 'LANDSAT_SCENE',
+  format: 'image/tiff',
+  subset: [
+    { axis: 'Lat', min: -34.0, max: -33.0 },
+    { axis: 'Long', min: 18.0, max: 19.0 }
+  ]
+});
+
+// Mit zeitlichem Subsetting
+const urlTemporal = builder.buildGetCoverageUrl({
+  coverageId: 'WEATHER_DATA',
+  format: 'application/netcdf',
+  subset: [
+    { axis: 'Lat', min: 40, max: 55 },
+    { axis: 'Long', min: -10, max: 10 },
+    { axis: 'time', min: '2024-10-16T00:00:00Z', max: '2024-10-23T00:00:00Z' }
+  ]
+});
+
+// Range Subsetting (Band-Auswahl)
+const urlRgb = builder.buildGetCoverageUrl({
+  coverageId: 'LANDSAT8',
+  format: 'image/tiff',
+  rangeSubset: ['B4', 'B3', 'B2'], // RGB Bänder
+  subset: [
+    { axis: 'Lat', min: -34.0, max: -33.0 },
+    { axis: 'Long', min: 18.0, max: 19.0 }
+  ]
+});
+
+// Skalierung (Scaling)
+const urlScaled = builder.buildGetCoverageUrl({
+  coverageId: 'MY_COVERAGE',
+  format: 'image/png',
+  scaling: { type: 'size', value: [1024, 1024] } // Auf 1024x1024 Pixel skalieren
+});
+
+// Mit Interpolation und CRS-Transformation
+const urlComplete = builder.buildGetCoverageUrl({
+  coverageId: 'SENTINEL2',
+  format: 'image/tiff',
+  subset: [
+    { axis: 'Lat', min: 50, max: 52 },
+    { axis: 'Long', min: 8, max: 10 }
+  ],
+  rangeSubset: ['B8', 'B4', 'B3'], // NIR-RGB Falschfarben
+  scaling: { type: 'size', value: [2048, 2048] },
+  outputCrs: 'EPSG:3857', // Web Mercator
+  subsettingCrs: 'EPSG:4326', // WGS84 für Subsetting
+  interpolation: 'bilinear',
+  mediaType: {
+    compression: 'DEFLATE'
+  }
+});
+
+// 2. XML POST Request generieren (WCS 2.0 nur)
+const xml = builder.buildGetCoverageXml({
+  coverageId: 'LANDSAT8_SCENE',
+  format: 'image/tiff',
+  subset: [
+    { axis: 'Lat', min: -34.0, max: -33.0 },
+    { axis: 'Long', min: 18.0, max: 19.0 },
+    { axis: 'time', value: '2024-01-01T10:30:00Z' }
+  ],
+  rangeSubset: ['B4', 'B3', 'B2'],
+  scaling: { type: 'size', value: [1024, 1024] }
+});
+
+console.log(xml);
+/* Ausgabe:
+<?xml version="1.0" encoding="UTF-8"?>
+<wcs:GetCoverage
+ xmlns:wcs="http://www.opengis.net/wcs/2.0"
+ xmlns:crs="http://www.opengis.net/wcs/crs/1.0"
+ xmlns:rsub="http://www.opengis.net/wcs/range-subsetting/1.0"
+ xmlns:scal="http://www.opengis.net/wcs/scaling/1.0"
+ service="WCS" version="2.0.1">
+  <wcs:CoverageId>LANDSAT8_SCENE</wcs:CoverageId>
+  <wcs:format>image/tiff</wcs:format>
+  <wcs:DimensionTrim>
+    <wcs:Dimension>Lat</wcs:Dimension>
+    <wcs:TrimLow>-34.0</wcs:TrimLow>
+    <wcs:TrimHigh>-33.0</wcs:TrimHigh>
+  </wcs:DimensionTrim>
+  ...
+</wcs:GetCoverage>
+*/
+
+// 3. Unterstützung für ältere WCS-Versionen
+const builder11 = new WcsRequestBuilder('https://example.com/wcs', '1.1.0');
+const url11 = builder11.buildGetCoverageUrl({
+  coverageId: 'MY_COVERAGE',
+  format: 'image/tiff'
+});
+// Verwendet 'identifier' statt 'coverageId' für WCS 1.1.0
+
+const builder10 = new WcsRequestBuilder('https://example.com/wcs', '1.0.0');
+const url10 = builder10.buildGetCoverageUrl({
+  coverageId: 'MY_COVERAGE',
+  format: 'image/tiff'
+});
+// Verwendet 'coverage' statt 'coverageId' für WCS 1.0.0
+
+// 4. Helper-Funktionen verwenden
+const urlHelper = buildWcsGetCoverageUrl(
+  'https://example.com/wcs',
+  {
+    coverageId: 'TEST_COVERAGE',
+    format: 'image/png',
+    subset: [
+      { axis: 'Lat', min: 50, max: 52 },
+      { axis: 'Long', min: 8, max: 10 }
+    ]
+  },
+  '2.0.1'
+);
+
+const xmlHelper = buildWcsGetCoverageXml(
+  {
+    coverageId: 'TEST_COVERAGE',
+    format: 'image/tiff',
+    rangeSubset: ['red', 'green', 'blue']
+  },
+  '2.0.1'
+);
+```
+
 ### GML Versionen konvertieren
 ```typescript
 const parser = new GmlParser();
@@ -578,6 +723,74 @@ generateCoverageXml(coverage: GmlCoverage, prettyPrint?: boolean): string
 - ✅ XML Escaping für sichere Ausgabe
 - ✅ Pretty-Print Option für lesbare XML-Ausgabe
 - ✅ Round-Trip Konvertierung (GML → Object → GML)
+
+### `WcsRequestBuilder`
+
+Generiert WCS GetCoverage Request URLs und XML für verschiedene WCS-Versionen:
+
+| Methode                                       | Beschreibung                                       | Rückgabe        |
+| --------------------------------------------- | -------------------------------------------------- | --------------- |
+| `buildGetCoverageUrl(options)`                | Generiert GET Request URL mit Query-Parametern     | `string` (URL)  |
+| `buildGetCoverageXml(options)`                | Generiert POST Request XML (nur WCS 2.0)           | `string` (XML)  |
+
+**Constructor:**
+```typescript
+new WcsRequestBuilder(baseUrl: string, version: WcsVersion = '2.0.1')
+```
+
+**WcsVersion:** `'2.0.1' | '2.0.0' | '1.1.0' | '1.0.0'`
+
+**WcsGetCoverageOptions:**
+```typescript
+{
+  coverageId: string;              // ID des Coverages
+  format?: string;                 // Ausgabeformat (Standard: 'image/tiff')
+  subset?: WcsSubset[];            // Räumliches/zeitliches Subsetting
+  scaling?: WcsScaling;            // Skalierung (size/extent/factor)
+  rangeSubset?: string[];          // Band-Auswahl
+  outputCrs?: string;              // Ziel-CRS (z.B. 'EPSG:4326')
+  subsettingCrs?: string;          // CRS für Subsetting
+  interpolation?: string;          // Interpolationsmethode
+  mediaType?: Record<string, string>; // Zusätzliche Parameter
+}
+```
+
+**WcsSubset:**
+```typescript
+{
+  axis: string;                    // Achsenname (z.B. 'Lat', 'Long', 'time')
+  min?: string | number;           // Untere Grenze
+  max?: string | number;           // Obere Grenze
+  value?: string | number;         // Einzelner Wert (Point Subsetting)
+}
+```
+
+**WcsScaling:**
+```typescript
+{
+  type: 'size' | 'extent' | 'factor';
+  value: number | number[];        // Skalierungswert(e)
+}
+```
+
+**Helper-Funktionen:**
+```typescript
+buildWcsGetCoverageUrl(baseUrl: string, options: WcsGetCoverageOptions, version?: WcsVersion): string
+buildWcsGetCoverageXml(options: WcsGetCoverageOptions, version?: WcsVersion): string
+```
+
+**Unterstützte Features:**
+- ✅ WCS 2.0.1, 2.0.0, 1.1.0, 1.0.0 Unterstützung
+- ✅ GET Request URLs mit Query-Parametern
+- ✅ POST Request XML (nur WCS 2.0)
+- ✅ Räumliches Subsetting (Bounding Box)
+- ✅ Zeitliches Subsetting (ISO 8601 Timestamps)
+- ✅ Höhen-Subsetting (Elevation)
+- ✅ Range Subsetting (Band-Auswahl)
+- ✅ Skalierung (Size, Extent, Factor)
+- ✅ CRS-Transformation
+- ✅ Interpolationsmethoden
+- ✅ XML Escaping für sichere Ausgabe
 
 ### `validateGml(gml: string, version: string)`
 → `Promise<boolean>`

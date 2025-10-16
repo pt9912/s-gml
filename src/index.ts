@@ -16,3 +16,12 @@ export {
     worldToPixel,
 } from './utils/geotiff-metadata.js';
 export { CoverageGenerator, generateCoverageXml } from './generators/coverage-generator.js';
+export {
+    WcsVersion,
+    WcsSubset,
+    WcsScaling,
+    WcsGetCoverageOptions,
+    WcsRequestBuilder,
+    buildWcsGetCoverageUrl,
+    buildWcsGetCoverageXml,
+} from './wcs/request-builder.js';
