@@ -21,6 +21,16 @@ RUN pnpm prune --prod
 # Runtime-Stage: Nur Node 22 (kein pnpm nötig)
 FROM node:22-alpine
 
+# OCI Labels für GitHub Container Registry
+LABEL org.opencontainers.image.title="s-gml"
+LABEL org.opencontainers.image.description="TypeScript library and CLI tool for parsing, converting, and validating GML (Geography Markup Language). Supports GML 2.1.2/3.0/3.2 and multiple output formats: GeoJSON, Shapefile, CSV, KML, WKT, CIS JSON, and CoverageJSON."
+LABEL org.opencontainers.image.version="1.5.0"
+LABEL org.opencontainers.image.authors="Dietmar Burkard"
+LABEL org.opencontainers.image.url="https://github.com/pt9912/s-gml"
+LABEL org.opencontainers.image.source="https://github.com/pt9912/s-gml"
+LABEL org.opencontainers.image.documentation="https://github.com/pt9912/s-gml#readme"
+LABEL org.opencontainers.image.licenses="MIT"
+
 WORKDIR /app
 
 # Install libxml2-utils for xmllint and pnpm
