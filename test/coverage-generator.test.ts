@@ -2,6 +2,7 @@ import { GmlParser, CoverageGenerator, generateCoverageXml } from '../src/index.
 import type {
     GmlRectifiedGridCoverage,
     GmlGridCoverage,
+    GmlReferenceableGridCoverage,
     GmlMultiPointCoverage,
 } from '../src/types.js';
 
@@ -147,6 +148,119 @@ describe('Coverage Generator', () => {
         });
     });
 
+    describe('ReferenceableGridCoverage', () => {
+        it('should generate ReferenceableGridCoverage XML', () => {
+            const coverage: GmlReferenceableGridCoverage = {
+                type: 'ReferenceableGridCoverage',
+                id: 'REFGC01',
+                boundedBy: {
+                    type: 'Envelope',
+                    bbox: [-180, -90, 180, 90],
+                    srsName: 'EPSG:4326',
+                    version: '3.2',
+                },
+                domainSet: {
+                    id: 'REFG01',
+                    dimension: 2,
+                    limits: { low: [0, 0], high: [719, 359] },
+                    axisLabels: ['lon', 'lat'],
+                },
+                rangeSet: {
+                    file: {
+                        fileName: 'irregular_grid.nc',
+                        fileStructure: 'netCDF',
+                    },
+                },
+                version: '3.2',
+            };
+
+            const xml = generator.generate(coverage);
+
+            expect(xml).toContain('<gml:ReferenceableGridCoverage');
+            expect(xml).toContain('gml:id="REFGC01"');
+            expect(xml).toContain('xmlns:gml="http://www.opengis.net/gml/3.2"');
+            expect(xml).toContain('xmlns:gmlcov="http://www.opengis.net/gmlcov/1.0"');
+            expect(xml).toContain('<gml:boundedBy>');
+            expect(xml).toContain('<gml:lowerCorner>-180 -90</gml:lowerCorner>');
+            expect(xml).toContain('<gml:upperCorner>180 90</gml:upperCorner>');
+            expect(xml).toContain('<gml:Grid');
+            expect(xml).toContain('gml:id="REFG01"');
+            expect(xml).toContain('dimension="2"');
+            expect(xml).toContain('<gml:low>0 0</gml:low>');
+            expect(xml).toContain('<gml:high>719 359</gml:high>');
+            expect(xml).toContain('<gml:axisLabels>lon lat</gml:axisLabels>');
+            expect(xml).toContain('<gml:fileName>irregular_grid.nc</gml:fileName>');
+            expect(xml).toContain('<gml:fileStructure>netCDF</gml:fileStructure>');
+            expect(xml).toContain('</gml:ReferenceableGridCoverage>');
+        });
+
+        it('should generate ReferenceableGridCoverage with multi-band RangeType', () => {
+            const coverage: GmlReferenceableGridCoverage = {
+                type: 'ReferenceableGridCoverage',
+                id: 'MODIS_LST',
+                boundedBy: {
+                    type: 'Envelope',
+                    bbox: [-120, 30, -110, 40],
+                    srsName: 'EPSG:4326',
+                    version: '3.2',
+                },
+                domainSet: {
+                    dimension: 2,
+                    limits: { low: [0, 0], high: [1199, 1199] },
+                    axisLabels: ['x', 'y'],
+                },
+                rangeSet: {
+                    file: { fileName: 'modis_lst.hdf' },
+                },
+                rangeType: {
+                    field: [
+                        { name: 'LST_Day', dataType: 'uint16', uom: 'K', description: 'Daytime Land Surface Temperature' },
+                        { name: 'LST_Night', dataType: 'uint16', uom: 'K', description: 'Nighttime Land Surface Temperature' },
+                        { name: 'QC_Day', dataType: 'uint8', description: 'Quality Control for Day' },
+                        { name: 'QC_Night', dataType: 'uint8', description: 'Quality Control for Night' },
+                    ],
+                },
+                version: '3.2',
+            };
+
+            const xml = generator.generate(coverage);
+
+            expect(xml).toContain('<gml:ReferenceableGridCoverage');
+            expect(xml).toContain('gml:id="MODIS_LST"');
+            expect(xml).toContain('<gmlcov:rangeType>');
+            expect(xml).toContain('<swe:DataRecord>');
+            expect(xml).toContain('<swe:field name="LST_Day">');
+            expect(xml).toContain('<swe:field name="LST_Night">');
+            expect(xml).toContain('<swe:field name="QC_Day">');
+            expect(xml).toContain('<swe:field name="QC_Night">');
+            expect(xml).toContain('uom="K"');
+            expect(xml).toContain('<swe:description>Daytime Land Surface Temperature</swe:description>');
+            expect(xml).toContain('<swe:dataType>uint16</swe:dataType>');
+        });
+
+        it('should generate ReferenceableGridCoverage without boundedBy', () => {
+            const coverage: GmlReferenceableGridCoverage = {
+                type: 'ReferenceableGridCoverage',
+                id: 'SIMPLE_REF',
+                domainSet: {
+                    dimension: 2,
+                    limits: { low: [0, 0], high: [99, 99] },
+                },
+                rangeSet: {
+                    file: { fileName: 'simple.tif' },
+                },
+                version: '3.2',
+            };
+
+            const xml = generator.generate(coverage);
+
+            expect(xml).toContain('<gml:ReferenceableGridCoverage');
+            expect(xml).not.toContain('<gml:boundedBy>');
+            expect(xml).toContain('<gml:Grid');
+            expect(xml).toContain('dimension="2"');
+        });
+    });
+
     describe('MultiPointCoverage', () => {
         it('should generate MultiPointCoverage XML', () => {
             const coverage: GmlMultiPointCoverage = {
@@ -286,6 +400,43 @@ describe('Coverage Generator', () => {
             expect(parsed.geometry.coordinates).toHaveLength(2);
             expect(parsed.geometry.coordinates[0]).toEqual([10, 20]);
             expect(parsed.geometry.coordinates[1]).toEqual([30, 40]);
+        });
+
+        it('should perform round-trip conversion for ReferenceableGridCoverage', async () => {
+            const coverage: GmlReferenceableGridCoverage = {
+                type: 'ReferenceableGridCoverage',
+                id: 'REF_ROUNDTRIP',
+                boundedBy: {
+                    type: 'Envelope',
+                    bbox: [-180, -90, 180, 90],
+                    srsName: 'EPSG:4326',
+                    version: '3.2',
+                },
+                domainSet: {
+                    dimension: 2,
+                    limits: { low: [0, 0], high: [719, 359] },
+                    axisLabels: ['lon', 'lat'],
+                },
+                rangeSet: {
+                    file: { fileName: 'ref_data.nc' },
+                },
+                version: '3.2',
+            };
+
+            // Generate XML
+            const xml = generator.generate(coverage);
+
+            // Parse back
+            const parser = new GmlParser();
+            const parsed = await parser.parse(xml) as any;
+
+            // Verify
+            expect(parsed.type).toBe('Feature');
+            expect(parsed.properties.coverageType).toBe('ReferenceableGridCoverage');
+            expect(parsed.properties.grid.dimension).toBe(2);
+            expect(parsed.properties.grid.limits.low).toEqual([0, 0]);
+            expect(parsed.properties.grid.limits.high).toEqual([719, 359]);
+            expect(parsed.bbox).toEqual([-180, -90, 180, 90]);
         });
     });
 
