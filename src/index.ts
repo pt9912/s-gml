@@ -25,3 +25,12 @@ export {
     buildWcsGetCoverageUrl,
     buildWcsGetCoverageXml,
 } from './wcs/request-builder.js';
+export {
+    WcsServiceIdentification,
+    WcsServiceProvider,
+    WcsOperationMetadata,
+    WcsCoverageSummary,
+    WcsCapabilities,
+    WcsCapabilitiesParser,
+    parseWcsCapabilities,
+} from './wcs/capabilities-parser.js';
