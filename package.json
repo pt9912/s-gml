@@ -36,6 +36,8 @@
         "gml",
         "geojson",
         "wfs",
+        "wcs",
+        "cis",
         "spatial",
         "gis"
     ],

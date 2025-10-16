@@ -174,7 +174,7 @@ const parser = new GmlParser(new MyBuilder());
 - Parser ignores `gml:null` elements in boundedBy
 - Parser ignores underscore (_) properties to avoid internal metadata
 
-## [1.1.2] - 2025-01-05
+## [1.1.2] - 2025-10-05
 
 ### Added
 - 71 new comprehensive tests across all components
@@ -210,12 +210,12 @@ const parser = new GmlParser(new MyBuilder());
 - Updated build scripts and dependencies
 - Removed obsolete test mocks
 
-## [1.1.1] - 2024-XX-XX
+## [1.1.1] - 2025-10-xx
 
 ### Changed
 - Minor improvements and bug fixes
 
-## [1.1.0] - 2024-XX-XX
+## [1.1.0] - 2025-10-xx
 
 ### Added
 - Initial release with GML parsing, conversion, and validation
