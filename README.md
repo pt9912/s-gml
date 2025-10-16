@@ -17,6 +17,7 @@ inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-/WCS-Unterstützung und
 | **Coverage-Unterstützung** | RectifiedGridCoverage, GridCoverage, MultiPointCoverage + GeoTIFF-Metadaten |
 | **JSON-Coverage-Formate**  | CIS JSON + CoverageJSON (beide OGC-Standards)         |
 | **WCS 2.0 XML Generator**  | Coverage → WCS 2.0 XML mit Multi-band RangeType       |
+| **Time-series Coverage**   | Temporale Achse mit ISO 8601 Timestamps & Auflösung   |
 | **Versionen konvertieren** | GML 2.1.2 ↔ 3.2 (inkl. FeatureCollections)            |
 | **WFS-Unterstützung**      | Parsen von WFS-FeatureCollections                     |
 | **URL-Unterstützung**      | Direktes Laden von GML-Daten aus URLs                 |
@@ -297,6 +298,70 @@ const irregularCoverage = {
 
 const modisXml = generateCoverageXml(irregularCoverage, true);
 // <gml:ReferenceableGridCoverage xmlns:gml="..." gml:id="MODIS_LST">...</gml:ReferenceableGridCoverage>
+
+// Time-series Coverage mit temporaler Achse
+const timeseriesCoverage = {
+  type: 'GridCoverage',
+  id: 'WEATHER_FORECAST',
+  domainSet: {
+    dimension: 2,
+    limits: { low: [0, 0], high: [720, 360] },
+    axisLabels: ['lon', 'lat']
+  },
+  rangeSet: {
+    file: { fileName: 'weather_forecast.grib2' }
+  },
+  rangeType: {
+    field: [
+      { name: 'temperature', dataType: 'float32', uom: 'K', description: 'Air temperature 2m above ground' },
+      { name: 'precipitation', dataType: 'float32', uom: 'kg/m2', description: 'Total precipitation' }
+    ]
+  },
+  // Temporale Achse für Zeitreihen
+  temporal: {
+    axisLabel: 'time',
+    startTime: '2024-10-16T00:00:00Z',
+    endTime: '2024-10-23T00:00:00Z',
+    resolution: 'PT1H', // ISO 8601 Duration: 1 Stunde
+    uom: 'ISO8601'
+  },
+  version: '3.2'
+};
+
+const weatherXml = generateCoverageXml(timeseriesCoverage);
+// Generiert WCS 2.0 XML mit gmlcov:metadata für temporale Achse
+
+// Landsat Time-series mit 16-Tage Auflösung
+const landsatSeries = {
+  type: 'RectifiedGridCoverage',
+  id: 'LANDSAT_TIMESERIES',
+  boundedBy: {
+    type: 'Envelope',
+    bbox: [-120, 30, -110, 40],
+    srsName: 'EPSG:4326',
+    version: '3.2'
+  },
+  domainSet: {
+    dimension: 2,
+    srsName: 'EPSG:4326',
+    limits: { low: [0, 0], high: [1000, 1000] },
+    axisLabels: ['x', 'y'],
+    origin: [30, -120],
+    offsetVectors: [[0.01, 0], [0, 0.01]]
+  },
+  rangeSet: {
+    file: { fileName: 'landsat_series.nc', fileStructure: 'netCDF' }
+  },
+  temporal: {
+    axisLabel: 'time',
+    startTime: '2024-01-01T00:00:00Z',
+    endTime: '2024-12-31T23:59:59Z',
+    resolution: 'P16D' // 16 Tage (Landsat Wiederholrate)
+  },
+  version: '3.2'
+};
+
+const landsatXml = generateCoverageXml(landsatSeries, true);
 ```
 
 ### GML Versionen konvertieren
@@ -509,6 +574,7 @@ generateCoverageXml(coverage: GmlCoverage, prettyPrint?: boolean): string
 **Unterstützte Features:**
 - ✅ Alle 4 Coverage-Typen (RectifiedGrid, Grid, ReferenceableGrid, MultiPoint)
 - ✅ Multi-band RangeType mit SWE DataRecord
+- ✅ Time-series Coverage mit temporaler Achse (ISO 8601)
 - ✅ XML Escaping für sichere Ausgabe
 - ✅ Pretty-Print Option für lesbare XML-Ausgabe
 - ✅ Round-Trip Konvertierung (GML → Object → GML)
