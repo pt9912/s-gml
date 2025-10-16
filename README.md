@@ -18,6 +18,7 @@ inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-/WCS-Unterstützung und
 | **JSON-Coverage-Formate**  | CIS JSON + CoverageJSON (beide OGC-Standards)         |
 | **WCS 2.0 XML Generator**  | Coverage → WCS 2.0 XML mit Multi-band RangeType       |
 | **WCS GetCoverage Builder** | Request-URLs und XML für WCS GetCoverage (2.0/1.1/1.0) |
+| **WCS Capabilities Parser** | Parsen von GetCapabilities Responses (WCS 2.0/1.1/1.0) |
 | **Time-series Coverage**   | Temporale Achse mit ISO 8601 Timestamps & Auflösung   |
 | **Versionen konvertieren** | GML 2.1.2 ↔ 3.2 (inkl. FeatureCollections)            |
 | **WFS-Unterstützung**      | Parsen von WFS-FeatureCollections                     |
@@ -509,6 +510,91 @@ const xmlHelper = buildWcsGetCoverageXml(
 );
 ```
 
+### WCS Capabilities parsen
+```typescript
+import { WcsCapabilitiesParser, parseWcsCapabilities } from '@npm9912/s-gml';
+
+// GetCapabilities Response parsen
+const capabilitiesXml = `<?xml version="1.0" encoding="UTF-8"?>
+<wcs:Capabilities xmlns:wcs="http://www.opengis.net/wcs/2.0"
+                  xmlns:ows="http://www.opengis.net/ows/2.0"
+                  version="2.0.1">
+  <ows:ServiceIdentification>
+    <ows:Title>My WCS Server</ows:Title>
+    <ows:Abstract>WCS Server for satellite imagery</ows:Abstract>
+  </ows:ServiceIdentification>
+  <wcs:Contents>
+    <wcs:CoverageSummary>
+      <wcs:CoverageId>LANDSAT8_SCENE</wcs:CoverageId>
+      <ows:Title>Landsat 8 Scene</ows:Title>
+      <ows:WGS84BoundingBox>
+        <ows:LowerCorner>-34.0 18.0</ows:LowerCorner>
+        <ows:UpperCorner>-33.0 19.0</ows:UpperCorner>
+      </ows:WGS84BoundingBox>
+    </wcs:CoverageSummary>
+  </wcs:Contents>
+</wcs:Capabilities>`;
+
+// Variante 1: Mit Parser-Klasse
+const parser = new WcsCapabilitiesParser();
+const capabilities = parser.parse(capabilitiesXml);
+
+console.log(capabilities.version); // '2.0.1'
+console.log(capabilities.serviceIdentification?.title); // 'My WCS Server'
+console.log(capabilities.coverages.length); // 1
+console.log(capabilities.coverages[0].coverageId); // 'LANDSAT8_SCENE'
+console.log(capabilities.coverages[0].wgs84BoundingBox);
+// { lowerCorner: [-34, 18], upperCorner: [-33, 19] }
+
+// Variante 2: Mit Helper-Funktion
+const caps = parseWcsCapabilities(capabilitiesXml);
+
+// Verfügbare Coverages auflisten
+caps.coverages.forEach(coverage => {
+  console.log(`Coverage ID: ${coverage.coverageId}`);
+  console.log(`  Title: ${coverage.title}`);
+  console.log(`  Subtype: ${coverage.coverageSubtype}`);
+  if (coverage.wgs84BoundingBox) {
+    console.log(`  Bounds: ${coverage.wgs84BoundingBox.lowerCorner} to ${coverage.wgs84BoundingBox.upperCorner}`);
+  }
+});
+
+// Service-Informationen
+if (caps.serviceIdentification) {
+  console.log('Service:', caps.serviceIdentification.title);
+  console.log('Abstract:', caps.serviceIdentification.abstract);
+  console.log('Keywords:', caps.serviceIdentification.keywords);
+}
+
+// Verfügbare Operationen
+caps.operations?.forEach(op => {
+  console.log(`Operation: ${op.name}`);
+  console.log(`  GET: ${op.getUrl}`);
+  console.log(`  POST: ${op.postUrl}`);
+});
+
+// Unterstützte Formate und CRS
+console.log('Supported formats:', caps.formats);
+console.log('Supported CRS:', caps.crs);
+
+// Unterstützung für WCS 1.1 und 1.0
+const wcs11Xml = `<?xml version="1.0" encoding="UTF-8"?>
+<wcs:Capabilities xmlns:wcs="http://www.opengis.net/wcs/1.1"
+                  xmlns:ows="http://www.opengis.net/ows/1.1"
+                  version="1.1.0">
+  <wcs:Contents>
+    <wcs:CoverageSummary>
+      <ows:Identifier>TEST_COVERAGE</ows:Identifier>
+      <ows:Title>Test Coverage</ows:Title>
+    </wcs:CoverageSummary>
+  </wcs:Contents>
+</wcs:Capabilities>`;
+
+const wcs11Caps = parseWcsCapabilities(wcs11Xml);
+console.log(wcs11Caps.version); // '1.1.0'
+console.log(wcs11Caps.coverages[0].coverageId); // 'TEST_COVERAGE'
+```
+
 ### GML Versionen konvertieren
 ```typescript
 const parser = new GmlParser();
@@ -791,6 +877,88 @@ buildWcsGetCoverageXml(options: WcsGetCoverageOptions, version?: WcsVersion): st
 - ✅ CRS-Transformation
 - ✅ Interpolationsmethoden
 - ✅ XML Escaping für sichere Ausgabe
+
+### `WcsCapabilitiesParser`
+
+Parst WCS GetCapabilities Responses für verschiedene WCS-Versionen:
+
+| Methode         | Beschreibung                                    | Rückgabe              |
+| --------------- | ----------------------------------------------- | --------------------- |
+| `parse(xml)`    | Parst WCS GetCapabilities XML Response          | `WcsCapabilities`     |
+
+**Constructor:**
+```typescript
+new WcsCapabilitiesParser()
+```
+
+**WcsCapabilities:**
+```typescript
+{
+  version: WcsVersion;                        // WCS Version
+  updateSequence?: string;                    // Update Sequenz
+  serviceIdentification?: WcsServiceIdentification;
+  serviceProvider?: WcsServiceProvider;
+  operations?: WcsOperationMetadata[];        // Verfügbare Operationen
+  coverages: WcsCoverageSummary[];            // Verfügbare Coverages
+  formats?: string[];                         // Unterstützte Formate
+  crs?: string[];                             // Unterstützte CRS
+}
+```
+
+**WcsCoverageSummary:**
+```typescript
+{
+  coverageId: string;                         // Coverage ID
+  coverageSubtype?: string;                   // Coverage-Typ (z.B. RectifiedGridCoverage)
+  title?: string;                             // Titel
+  abstract?: string;                          // Beschreibung
+  keywords?: string[];                        // Schlagwörter
+  boundingBox?: {                             // Bounding Box
+    crs?: string;
+    lowerCorner: number[];
+    upperCorner: number[];
+  };
+  wgs84BoundingBox?: {                        // WGS84 Bounding Box
+    lowerCorner: number[];
+    upperCorner: number[];
+  };
+}
+```
+
+**WcsServiceIdentification:**
+```typescript
+{
+  title?: string;                             // Service-Titel
+  abstract?: string;                          // Service-Beschreibung
+  keywords?: string[];                        // Schlagwörter
+  serviceType?: string;                       // Service-Typ
+  serviceTypeVersion?: string[];              // Unterstützte Versionen
+  fees?: string;                              // Gebühren
+  accessConstraints?: string[];               // Zugriffsbeschränkungen
+}
+```
+
+**WcsOperationMetadata:**
+```typescript
+{
+  name: string;                               // Operations-Name
+  getUrl?: string;                            // GET Endpoint
+  postUrl?: string;                           // POST Endpoint
+}
+```
+
+**Helper-Funktion:**
+```typescript
+parseWcsCapabilities(xml: string): WcsCapabilities
+```
+
+**Unterstützte Features:**
+- ✅ WCS 2.0.1, 2.0.0, 1.1.x, 1.0.0 Unterstützung
+- ✅ Service Identification und Provider Informationen
+- ✅ Operations Metadata (GetCapabilities, DescribeCoverage, GetCoverage)
+- ✅ Coverage Summaries mit Bounding Boxes
+- ✅ Unterstützte Formate und CRS Listen
+- ✅ Automatische Versionserkennung
 
 ### `validateGml(gml: string, version: string)`
 → `Promise<boolean>`
