@@ -164,7 +164,7 @@ export class StreamingGmlParser {
         const decoder = new TextDecoder();
 
         try {
-            while (true) {
+            for (;;) {
                 const { done, value } = await reader.read();
 
                 if (done) break;

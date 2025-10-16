@@ -322,10 +322,16 @@ export class GeoJsonBuilder implements Builder {
     }
 
     buildFeatureCollection(gml: GmlFeatureCollection): FeatureCollection {
-        return {
+        const featureCollection: FeatureCollection = {
             type: 'FeatureCollection',
             features: gml.features.map(feature => this.buildFeature(feature)),
         };
+
+        if (gml.bounds) {
+            featureCollection.bbox = gml.bounds.bbox;
+        }
+
+        return featureCollection;
     }
 
     private buildGeometry(gml: GmlGeometry): Geometry | Feature {

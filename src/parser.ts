@@ -763,18 +763,13 @@ export class GmlParser {
 
     private toGeoJson(gmlObject: GmlGeometry | GmlFeature | GmlFeatureCollection | GmlCoverage): Geometry | Feature | FeatureCollection {
         if (this.isFeatureCollection(gmlObject)) {
-            const featureCollection: FeatureCollection = {
-                type: 'FeatureCollection',
-                features: gmlObject.features.map(feature => this.toGeoJsonFeature(feature)),
-            };
-            if (gmlObject.bounds) {
-                featureCollection.bbox = gmlObject.bounds.bbox;
-            }
-            return featureCollection;
+            // Use builder for FeatureCollection
+            return this.builder.buildFeatureCollection(gmlObject);
         }
 
         if (this.isFeature(gmlObject)) {
-            return this.toGeoJsonFeature(gmlObject);
+            // Use builder for Feature
+            return this.builder.buildFeature(gmlObject);
         }
 
         if (this.isCoverage(gmlObject)) {
@@ -782,36 +777,6 @@ export class GmlParser {
         }
 
         return this.geometryToGeoJson(gmlObject);
-    }
-
-    private toGeoJsonFeature(feature: GmlFeature): Feature {
-        const geometryResult = this.geometryToGeoJson(feature.geometry);
-        let geometry: Geometry;
-        let properties = { ...feature.properties };
-
-        if ((geometryResult as Feature).type === 'Feature') {
-            const featureGeometry = geometryResult as Feature;
-            geometry = featureGeometry.geometry as Geometry;
-            properties = { ...featureGeometry.properties, ...properties };
-        } else {
-            geometry = geometryResult as Geometry;
-        }
-
-        const geoJsonFeature: Feature = {
-            type: 'Feature',
-            geometry,
-            properties,
-        };
-
-        if (feature.id) {
-            geoJsonFeature.id = feature.id;
-        }
-
-        if (feature.boundedBy) {
-            geoJsonFeature.bbox = feature.boundedBy.bbox;
-        }
-
-        return geoJsonFeature;
     }
 
     private geometryToGeoJson(geometry: GmlGeometry): Geometry | Feature {
