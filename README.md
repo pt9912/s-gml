@@ -16,6 +16,7 @@ inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-/WCS-Unterstützung und
 | **GML → GeoJSON**          | Parsen aller GML-Elemente nach GeoJSON                |
 | **Coverage-Unterstützung** | RectifiedGridCoverage, GridCoverage, MultiPointCoverage + GeoTIFF-Metadaten |
 | **JSON-Coverage-Formate**  | CIS JSON + CoverageJSON (beide OGC-Standards)         |
+| **WCS 2.0 XML Generator**  | Coverage → WCS 2.0 XML mit Multi-band RangeType       |
 | **Versionen konvertieren** | GML 2.1.2 ↔ 3.2 (inkl. FeatureCollections)            |
 | **WFS-Unterstützung**      | Parsen von WFS-FeatureCollections                     |
 | **URL-Unterstützung**      | Direktes Laden von GML-Daten aus URLs                 |
@@ -211,6 +212,63 @@ console.log(geojson);
 } */
 ```
 
+### Coverage zu WCS 2.0 XML generieren
+```typescript
+import { CoverageGenerator, generateCoverageXml } from '@npm9912/s-gml';
+
+// Coverage-Objekt erstellen oder aus GML parsen
+const coverage = {
+  type: 'RectifiedGridCoverage',
+  id: 'MY_COVERAGE',
+  boundedBy: {
+    type: 'Envelope',
+    bbox: [5, 10, 15, 20],
+    srsName: 'EPSG:4326',
+    version: '3.2'
+  },
+  domainSet: {
+    dimension: 2,
+    srsName: 'EPSG:4326',
+    limits: { low: [0, 0], high: [99, 199] },
+    axisLabels: ['Lat', 'Long'],
+    origin: [15.0, 5.0],
+    offsetVectors: [[0, 0.2], [-0.2, 0]]
+  },
+  rangeSet: {
+    file: {
+      fileName: 'coverage_data.tif',
+      fileStructure: 'GeoTIFF'
+    }
+  },
+  // Optional: Multi-band RangeType
+  rangeType: {
+    field: [
+      { name: 'red', dataType: 'uint8', uom: 'W.m-2.sr-1' },
+      { name: 'green', dataType: 'uint8', uom: 'W.m-2.sr-1' },
+      { name: 'blue', dataType: 'uint8', uom: 'W.m-2.sr-1' }
+    ]
+  },
+  version: '3.2'
+};
+
+// Variante 1: Mit Generator-Klasse
+const generator = new CoverageGenerator();
+const xml = generator.generate(coverage);
+console.log(xml);
+// <gml:RectifiedGridCoverage xmlns:gml="..." gml:id="MY_COVERAGE">...</gml:RectifiedGridCoverage>
+
+// Variante 2: Mit Helper-Funktion
+const xmlPretty = generateCoverageXml(coverage, true); // prettyPrint = true
+console.log(xmlPretty); // Formatiertes XML
+
+// Round-Trip: GML → Object → GML
+const parser = new GmlParser();
+const parsedCoverage = await parser.parse(originalXml);
+// Extrahiere Coverage-Objekt aus GeoJSON...
+const regeneratedXml = generateCoverageXml(coverageObject);
+// Ergibt wieder valides WCS 2.0 XML!
+```
+
 ### GML Versionen konvertieren
 ```typescript
 const parser = new GmlParser();
@@ -400,6 +458,30 @@ interface Builder<TGeometry, TFeature, TFeatureCollection> {
   buildFeatureCollection(gml: GmlFeatureCollection): TFeatureCollection;
 }
 ```
+
+### `CoverageGenerator`
+
+Generiert WCS 2.0 XML aus Coverage-Objekten:
+
+| Methode                                        | Beschreibung                                    | Rückgabe        |
+| ---------------------------------------------- | ----------------------------------------------- | --------------- |
+| `generate(coverage: GmlCoverage, prettyPrint)` | Generiert WCS 2.0 XML aus Coverage-Objekt       | `string` (XML)  |
+| `generateRectifiedGridCoverage(coverage)`      | Generiert RectifiedGridCoverage XML             | `string` (XML)  |
+| `generateGridCoverage(coverage)`               | Generiert GridCoverage XML                      | `string` (XML)  |
+| `generateReferenceableGridCoverage(coverage)`  | Generiert ReferenceableGridCoverage XML         | `string` (XML)  |
+| `generateMultiPointCoverage(coverage)`         | Generiert MultiPointCoverage XML                | `string` (XML)  |
+
+**Helper-Funktion:**
+```typescript
+generateCoverageXml(coverage: GmlCoverage, prettyPrint?: boolean): string
+```
+
+**Unterstützte Features:**
+- ✅ Alle 4 Coverage-Typen (RectifiedGrid, Grid, ReferenceableGrid, MultiPoint)
+- ✅ Multi-band RangeType mit SWE DataRecord
+- ✅ XML Escaping für sichere Ausgabe
+- ✅ Pretty-Print Option für lesbare XML-Ausgabe
+- ✅ Round-Trip Konvertierung (GML → Object → GML)
 
 ### `validateGml(gml: string, version: string)`
 → `Promise<boolean>`
