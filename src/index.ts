@@ -15,3 +15,4 @@ export {
     pixelToWorld,
     worldToPixel,
 } from './utils/geotiff-metadata.js';
+export { CoverageGenerator, generateCoverageXml } from './generators/coverage-generator.js';
