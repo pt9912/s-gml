@@ -3,18 +3,23 @@ import {
     Builder,
     GmlBox,
     GmlConvertOptions,
+    GmlCoverage,
     GmlCurve,
     GmlEnvelope,
     GmlFeature,
     GmlFeatureCollection,
     GmlGeometry,
+    GmlGridCoverage,
     GmlLinearRing,
     GmlLineString,
     GmlMultiLineString,
     GmlMultiPoint,
+    GmlMultiPointCoverage,
     GmlMultiPolygon,
     GmlPoint,
     GmlPolygon,
+    GmlRectifiedGridCoverage,
+    GmlReferenceableGridCoverage,
     GmlSurface,
     GmlVersion,
     Feature,
@@ -43,6 +48,14 @@ const GEOMETRY_ELEMENT_NAMES = new Set([
     'MultiLineString',
     'MultiPolygon',
 ]);
+
+// Coverage element names for future use (e.g., searching)
+// const COVERAGE_ELEMENT_NAMES = new Set([
+//     'RectifiedGridCoverage',
+//     'GridCoverage',
+//     'ReferenceableGridCoverage',
+//     'GMLJP2RectifiedGridCoverage',
+// ]);
 
 export class GmlParser {
     private builder: Builder;
@@ -132,6 +145,15 @@ export class GmlParser {
                 return this.parseMultiPolygon(element, version);
             case 'FeatureCollection':
                 return this.parseFeatureCollection(element, version);
+            case 'RectifiedGridCoverage':
+            case 'GMLJP2RectifiedGridCoverage':
+                return this.parseRectifiedGridCoverage(element, version) as any;
+            case 'GridCoverage':
+                return this.parseGridCoverage(element, version) as any;
+            case 'ReferenceableGridCoverage':
+                return this.parseReferenceableGridCoverage(element, version) as any;
+            case 'MultiPointCoverage':
+                return this.parseMultiPointCoverage(element, version) as any;
             default:
                 throw new Error(`Unsupported GML element: ${name}`);
         }
@@ -357,6 +379,291 @@ export class GmlParser {
         return { type: 'MultiPolygon', coordinates: polygons, srsName, version };
     }
 
+    private parseRectifiedGridCoverage(element: any, version: GmlVersion): GmlRectifiedGridCoverage {
+        const id = element.$?.['gml:id'];
+
+        // Parse boundedBy
+        let boundedBy: GmlEnvelope | undefined;
+        const boundedByNode = element['gml:boundedBy'];
+        if (boundedByNode && !boundedByNode['gml:null']) {
+            const envelopeNode = boundedByNode['gml:Envelope'] ?? boundedByNode;
+            boundedBy = this.parseEnvelope(this.normalizeElement(envelopeNode), version);
+        }
+
+        // Parse domainSet (RectifiedGrid)
+        const domainSetNode = element['gml:domainSet'] || element['gmlcov:domainSet'];
+        if (!domainSetNode) throw new Error('Invalid RectifiedGridCoverage: missing domainSet');
+
+        const rectifiedGridNode = domainSetNode['gml:RectifiedGrid'];
+        if (!rectifiedGridNode) throw new Error('Invalid RectifiedGridCoverage: missing RectifiedGrid');
+
+        const gridElement = this.normalizeElement(rectifiedGridNode);
+        const dimension = parseInt(gridElement.$?.dimension, 10) || 2;
+        const srsName = gridElement.$?.srsName;
+
+        // Parse limits
+        const limitsNode = gridElement['gml:limits'] || gridElement['gml:gridLimits'];
+        const gridEnvelopeNode = limitsNode?.['gml:GridEnvelope'];
+        if (!gridEnvelopeNode) throw new Error('Invalid RectifiedGridCoverage: missing GridEnvelope');
+
+        const lowText = this.getText(gridEnvelopeNode['gml:low']);
+        const highText = this.getText(gridEnvelopeNode['gml:high']);
+        if (typeof lowText !== 'string' || typeof highText !== 'string') {
+            throw new Error('Invalid GridEnvelope');
+        }
+
+        const low = lowText.trim().split(/\s+/).map(Number);
+        const high = highText.trim().split(/\s+/).map(Number);
+
+        // Parse axisLabels
+        const axisLabelsText = this.getText(gridElement['gml:axisLabels']);
+        const axisLabels = axisLabelsText?.trim().split(/\s+/);
+
+        // Parse origin
+        const originNode = gridElement['gml:origin'];
+        const pointNode = originNode?.['gml:Point'];
+        if (!pointNode) throw new Error('Invalid RectifiedGridCoverage: missing origin');
+
+        const posText = this.getText(pointNode['gml:pos']);
+        if (typeof posText !== 'string') throw new Error('Invalid origin Point');
+        const origin = posText.trim().split(/\s+/).map(Number);
+
+        // Parse offsetVectors
+        const offsetVectorNodes = this.ensureArray(gridElement['gml:offsetVector']);
+        const offsetVectors = offsetVectorNodes.map(node => {
+            const text = this.getText(node);
+            if (typeof text !== 'string') throw new Error('Invalid offsetVector');
+            return text.trim().split(/\s+/).map(Number);
+        });
+
+        const domainSet = {
+            id: gridElement.$?.['gml:id'],
+            dimension,
+            srsName,
+            limits: { low, high },
+            axisLabels,
+            origin,
+            offsetVectors,
+        };
+
+        // Parse rangeSet
+        const rangeSetNode = element['gml:rangeSet'] || element['gmlcov:rangeSet'];
+        const rangeSet: any = {};
+
+        if (rangeSetNode) {
+            const fileNode = rangeSetNode['gml:File'];
+            if (fileNode) {
+                const fileName = this.getText(fileNode['gml:fileName']);
+                const fileStructure = this.getText(fileNode['gml:fileStructure']);
+                if (fileName) {
+                    rangeSet.file = {
+                        fileName,
+                        fileStructure: fileStructure || undefined,
+                    };
+                }
+            }
+        }
+
+        // Parse rangeType (optional)
+        const rangeTypeNode = element['gml:rangeType'] || element['gmlcov:rangeType'];
+        let rangeType: any = undefined;
+        if (rangeTypeNode) {
+            const dataRecordNode = rangeTypeNode['swe:DataRecord'];
+            if (dataRecordNode) {
+                const fieldNodes = this.ensureArray(dataRecordNode['swe:field']);
+                rangeType = {
+                    field: fieldNodes.map(fieldNode => ({
+                        name: fieldNode.$?.name,
+                        dataType: this.getText(fieldNode['swe:Quantity']?.['swe:dataType']),
+                        uom: fieldNode['swe:Quantity']?.$?.uom,
+                        description: this.getText(fieldNode['swe:Quantity']?.['swe:description']),
+                    })),
+                };
+            }
+        }
+
+        return {
+            type: 'RectifiedGridCoverage',
+            id,
+            boundedBy,
+            domainSet,
+            rangeSet,
+            rangeType,
+            version,
+        };
+    }
+
+    private parseGridCoverage(element: any, version: GmlVersion): GmlGridCoverage {
+        const id = element.$?.['gml:id'];
+
+        // Parse boundedBy
+        let boundedBy: GmlEnvelope | undefined;
+        const boundedByNode = element['gml:boundedBy'];
+        if (boundedByNode && !boundedByNode['gml:null']) {
+            const envelopeNode = boundedByNode['gml:Envelope'] ?? boundedByNode;
+            boundedBy = this.parseEnvelope(this.normalizeElement(envelopeNode), version);
+        }
+
+        // Parse domainSet (Grid)
+        const domainSetNode = element['gml:domainSet'] || element['gmlcov:domainSet'];
+        if (!domainSetNode) throw new Error('Invalid GridCoverage: missing domainSet');
+
+        const gridNode = domainSetNode['gml:Grid'];
+        if (!gridNode) throw new Error('Invalid GridCoverage: missing Grid');
+
+        const gridElement = this.normalizeElement(gridNode);
+        const dimension = parseInt(gridElement.$?.dimension, 10) || 2;
+
+        // Parse limits
+        const limitsNode = gridElement['gml:limits'] || gridElement['gml:gridLimits'];
+        const gridEnvelopeNode = limitsNode?.['gml:GridEnvelope'];
+        if (!gridEnvelopeNode) throw new Error('Invalid GridCoverage: missing GridEnvelope');
+
+        const lowText = this.getText(gridEnvelopeNode['gml:low']);
+        const highText = this.getText(gridEnvelopeNode['gml:high']);
+        if (typeof lowText !== 'string' || typeof highText !== 'string') {
+            throw new Error('Invalid GridEnvelope');
+        }
+
+        const low = lowText.trim().split(/\s+/).map(Number);
+        const high = highText.trim().split(/\s+/).map(Number);
+
+        // Parse axisLabels
+        const axisLabelsText = this.getText(gridElement['gml:axisLabels']);
+        const axisLabels = axisLabelsText?.trim().split(/\s+/);
+
+        const domainSet = {
+            id: gridElement.$?.['gml:id'],
+            dimension,
+            limits: { low, high },
+            axisLabels,
+        };
+
+        // Parse rangeSet
+        const rangeSetNode = element['gml:rangeSet'] || element['gmlcov:rangeSet'];
+        const rangeSet: any = {};
+
+        if (rangeSetNode) {
+            const fileNode = rangeSetNode['gml:File'];
+            if (fileNode) {
+                const fileName = this.getText(fileNode['gml:fileName']);
+                const fileStructure = this.getText(fileNode['gml:fileStructure']);
+                if (fileName) {
+                    rangeSet.file = {
+                        fileName,
+                        fileStructure: fileStructure || undefined,
+                    };
+                }
+            }
+        }
+
+        // Parse rangeType (optional)
+        const rangeTypeNode = element['gml:rangeType'] || element['gmlcov:rangeType'];
+        let rangeType: any = undefined;
+        if (rangeTypeNode) {
+            const dataRecordNode = rangeTypeNode['swe:DataRecord'];
+            if (dataRecordNode) {
+                const fieldNodes = this.ensureArray(dataRecordNode['swe:field']);
+                rangeType = {
+                    field: fieldNodes.map(fieldNode => ({
+                        name: fieldNode.$?.name,
+                        dataType: this.getText(fieldNode['swe:Quantity']?.['swe:dataType']),
+                        uom: fieldNode['swe:Quantity']?.$?.uom,
+                        description: this.getText(fieldNode['swe:Quantity']?.['swe:description']),
+                    })),
+                };
+            }
+        }
+
+        return {
+            type: 'GridCoverage',
+            id,
+            boundedBy,
+            domainSet,
+            rangeSet,
+            rangeType,
+            version,
+        };
+    }
+
+    private parseReferenceableGridCoverage(element: any, version: GmlVersion): GmlReferenceableGridCoverage {
+        // For now, parse similar to GridCoverage
+        // A full implementation would parse additional georeferencing information
+        const gridCoverage = this.parseGridCoverage(element, version);
+
+        return {
+            ...gridCoverage,
+            type: 'ReferenceableGridCoverage',
+        };
+    }
+
+    private parseMultiPointCoverage(element: any, version: GmlVersion): GmlMultiPointCoverage {
+        const id = element.$?.['gml:id'];
+
+        // Parse boundedBy
+        let boundedBy: GmlEnvelope | undefined;
+        const boundedByNode = element['gml:boundedBy'];
+        if (boundedByNode && !boundedByNode['gml:null']) {
+            const envelopeNode = boundedByNode['gml:Envelope'] ?? boundedByNode;
+            boundedBy = this.parseEnvelope(this.normalizeElement(envelopeNode), version);
+        }
+
+        // Parse domainSet (MultiPoint)
+        const domainSetNode = element['gml:domainSet'] || element['gmlcov:domainSet'];
+        if (!domainSetNode) throw new Error('Invalid MultiPointCoverage: missing domainSet');
+
+        const multiPointNode = domainSetNode['gml:MultiPoint'];
+        if (!multiPointNode) throw new Error('Invalid MultiPointCoverage: missing MultiPoint');
+
+        const domainSet = this.parseMultiPoint(this.normalizeElement(multiPointNode), version);
+
+        // Parse rangeSet
+        const rangeSetNode = element['gml:rangeSet'] || element['gmlcov:rangeSet'];
+        const rangeSet: any = {};
+
+        if (rangeSetNode) {
+            const fileNode = rangeSetNode['gml:File'];
+            if (fileNode) {
+                const fileName = this.getText(fileNode['gml:fileName']);
+                const fileStructure = this.getText(fileNode['gml:fileStructure']);
+                if (fileName) {
+                    rangeSet.file = {
+                        fileName,
+                        fileStructure: fileStructure || undefined,
+                    };
+                }
+            }
+        }
+
+        // Parse rangeType (optional)
+        const rangeTypeNode = element['gml:rangeType'] || element['gmlcov:rangeType'];
+        let rangeType: any = undefined;
+        if (rangeTypeNode) {
+            const dataRecordNode = rangeTypeNode['swe:DataRecord'];
+            if (dataRecordNode) {
+                const fieldNodes = this.ensureArray(dataRecordNode['swe:field']);
+                rangeType = {
+                    field: fieldNodes.map(fieldNode => ({
+                        name: fieldNode.$?.name,
+                        dataType: this.getText(fieldNode['swe:Quantity']?.['swe:dataType']),
+                        uom: fieldNode['swe:Quantity']?.$?.uom,
+                        description: this.getText(fieldNode['swe:Quantity']?.['swe:description']),
+                    })),
+                };
+            }
+        }
+
+        return {
+            type: 'MultiPointCoverage',
+            id,
+            boundedBy,
+            domainSet,
+            rangeSet,
+            rangeType,
+            version,
+        };
+    }
+
     private parseFeatureCollection(element: any, version: GmlVersion): GmlFeatureCollection {
         const features: GmlFeature[] = [];
 
@@ -454,7 +761,7 @@ export class GmlParser {
         return [exteriorRing, ...interiorRings];
     }
 
-    private toGeoJson(gmlObject: GmlGeometry | GmlFeature | GmlFeatureCollection): Geometry | Feature | FeatureCollection {
+    private toGeoJson(gmlObject: GmlGeometry | GmlFeature | GmlFeatureCollection | GmlCoverage): Geometry | Feature | FeatureCollection {
         if (this.isFeatureCollection(gmlObject)) {
             const featureCollection: FeatureCollection = {
                 type: 'FeatureCollection',
@@ -468,6 +775,10 @@ export class GmlParser {
 
         if (this.isFeature(gmlObject)) {
             return this.toGeoJsonFeature(gmlObject);
+        }
+
+        if (this.isCoverage(gmlObject)) {
+            return this.coverageToGeoJson(gmlObject);
         }
 
         return this.geometryToGeoJson(gmlObject);
@@ -731,11 +1042,31 @@ export class GmlParser {
         return parts[parts.length - 1];
     }
 
-    private isFeatureCollection(value: GmlGeometry | GmlFeature | GmlFeatureCollection): value is GmlFeatureCollection {
+    private isFeatureCollection(value: GmlGeometry | GmlFeature | GmlFeatureCollection | GmlCoverage): value is GmlFeatureCollection {
         return (value as GmlFeatureCollection).type === 'FeatureCollection';
     }
 
-    private isFeature(value: GmlGeometry | GmlFeature | GmlFeatureCollection): value is GmlFeature {
+    private isFeature(value: GmlGeometry | GmlFeature | GmlFeatureCollection | GmlCoverage): value is GmlFeature {
         return (value as GmlFeature).geometry !== undefined && (value as GmlFeature).properties !== undefined;
+    }
+
+    private isCoverage(value: any): value is GmlCoverage {
+        const type = (value as GmlCoverage).type;
+        return type === 'RectifiedGridCoverage' || type === 'GridCoverage' || type === 'ReferenceableGridCoverage' || type === 'MultiPointCoverage';
+    }
+
+    private coverageToGeoJson(coverage: GmlCoverage): Feature {
+        switch (coverage.type) {
+            case 'RectifiedGridCoverage':
+                return this.builder.buildRectifiedGridCoverage(coverage);
+            case 'GridCoverage':
+                return this.builder.buildGridCoverage(coverage);
+            case 'ReferenceableGridCoverage':
+                return this.builder.buildReferenceableGridCoverage(coverage);
+            case 'MultiPointCoverage':
+                return this.builder.buildMultiPointCoverage(coverage);
+            default:
+                throw new Error(`Unsupported coverage type: ${(coverage as any).type}`);
+        }
     }
 }

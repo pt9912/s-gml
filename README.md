@@ -6,7 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%23007ACC.svg)](https://www.typescriptlang.org/)
 
 **TypeScript-Bibliothek zum Parsen, Konvertieren und Validieren von GML 2.1.2/3.0/3.2** –
-inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-Unterstützung und Docker-CLI.
+inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-/WCS-Unterstützung und Docker-CLI.
 
 ---
 ## ✨ Features
@@ -14,12 +14,13 @@ inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-Unterstützung und Dock
 | Feature                    | Beschreibung                                          |
 | -------------------------- | ----------------------------------------------------- |
 | **GML → GeoJSON**          | Parsen aller GML-Elemente nach GeoJSON                |
+| **Coverage-Unterstützung** | RectifiedGridCoverage, GridCoverage, MultiPointCoverage + GeoTIFF-Metadaten |
+| **JSON-Coverage-Formate**  | CIS JSON + CoverageJSON (beide OGC-Standards)         |
 | **Versionen konvertieren** | GML 2.1.2 ↔ 3.2 (inkl. FeatureCollections)            |
 | **WFS-Unterstützung**      | Parsen von WFS-FeatureCollections                     |
 | **URL-Unterstützung**      | Direktes Laden von GML-Daten aus URLs                 |
 | **OWS Exception Handling** | Automatische Erkennung und Behandlung von WFS-Fehlern |
 | **XSD-Validierung**        | Prüfung gegen offizielle GML-Schemata                 |
-| **Neue GML-Elemente**      | `Envelope`, `Box`, `Curve`, `Surface`, `LinearRing`   |
 | **Docker-CLI**             | Bereit als Container-Image für Batch-Verarbeitung     |
 
 ---
@@ -103,6 +104,113 @@ console.log(surface.type);
 // "MultiPolygon"
 ```
 
+### GML Coverage parsen
+```typescript
+const coverage = await parser.parse(`
+  <gml\:RectifiedGridCoverage xmlns\:gml="http://www.opengis.net/gml/3.2" gml:id="RGC01">
+    <gml\:boundedBy>
+      <gml\:Envelope srsName="EPSG:4326">
+        <gml\:lowerCorner>1.0 1.0</gml\:lowerCorner>
+        <gml\:upperCorner>10.0 20.0</gml\:upperCorner>
+      </gml\:Envelope>
+    </gml\:boundedBy>
+    <gml\:domainSet>
+      <gml\:RectifiedGrid dimension="2" srsName="EPSG:4326">
+        <gml\:limits>
+          <gml\:GridEnvelope>
+            <gml\:low>0 0</gml\:low>
+            <gml\:high>99 199</gml\:high>
+          </gml\:GridEnvelope>
+        </gml\:limits>
+        <gml\:origin>
+          <gml\:Point><gml\:pos>10.0 1.0</gml\:pos></gml\:Point>
+        </gml\:origin>
+        <gml\:offsetVector>0 0.1</gml\:offsetVector>
+        <gml\:offsetVector>-0.1 0</gml\:offsetVector>
+      </gml\:RectifiedGrid>
+    </gml\:domainSet>
+    <gml\:rangeSet>
+      <gml\:File>
+        <gml\:fileName>coverage_data.tif</gml\:fileName>
+      </gml\:File>
+    </gml\:rangeSet>
+  </gml\:RectifiedGridCoverage>
+`);
+
+console.log(coverage.type); // 'Feature'
+console.log(coverage.properties.coverageType); // 'RectifiedGridCoverage'
+console.log(coverage.properties.grid.limits); // { low: [0, 0], high: [99, 199] }
+```
+
+### GeoTIFF-Metadaten aus Coverage extrahieren
+```typescript
+import { extractGeoTiffMetadata, pixelToWorld } from '@npm9912/s-gml';
+
+// Extrahiere GeoTIFF-kompatible Metadaten
+const metadata = extractGeoTiffMetadata(gmlCoverageObject);
+
+console.log(metadata.width);      // 100 Pixel
+console.log(metadata.height);     // 200 Pixel
+console.log(metadata.bbox);       // [1, 1, 10, 20]
+console.log(metadata.crs);        // 'EPSG:4326'
+console.log(metadata.transform);  // Affine transformation matrix
+console.log(metadata.resolution); // [xRes, yRes]
+
+// Konvertiere Pixel- zu Weltkoordinaten
+const worldCoords = pixelToWorld(50, 100, metadata);
+console.log(worldCoords); // [lon, lat] in Weltkoordinaten
+```
+
+### Coverage in JSON-Formaten ausgeben
+```typescript
+import { GmlParser } from '@npm9912/s-gml';
+
+// 1. CIS JSON (OGC Coverage Implementation Schema)
+const cisParser = new GmlParser('cis-json');
+const cisJson = await cisParser.parse(coverageGml);
+console.log(cisJson);
+/* {
+  "@context": "http://www.opengis.net/cis/1.1/json",
+  "type": "CoverageByDomainAndRangeType",
+  "id": "RGC01",
+  "domainSet": {
+    "type": "GeneralGrid",
+    "srsName": "EPSG:4326",
+    "axis": [...]
+  },
+  "rangeSet": {...}
+} */
+
+// 2. CoverageJSON (OGC Community Standard - web-optimiert)
+const covjsonParser = new GmlParser('coveragejson');
+const coveragejson = await covjsonParser.parse(coverageGml);
+console.log(coveragejson);
+/* {
+  "type": "Coverage",
+  "domain": {
+    "type": "Domain",
+    "domainType": "Grid",
+    "axes": { "x": {...}, "y": {...} },
+    "referencing": [...]
+  },
+  "parameters": {...},
+  "ranges": {...}
+} */
+
+// 3. GeoJSON Feature (Standard-Ausgabe)
+const geojsonParser = new GmlParser('geojson'); // oder new GmlParser()
+const geojson = await geojsonParser.parse(coverageGml);
+console.log(geojson);
+/* {
+  "type": "Feature",
+  "geometry": {...},
+  "properties": {
+    "coverageType": "RectifiedGridCoverage",
+    "grid": {...}
+  }
+} */
+```
+
 ### GML Versionen konvertieren
 ```typescript
 const parser = new GmlParser();
@@ -155,12 +263,16 @@ try {
 | `Envelope`          | ✅         | ✅           | `Feature` + `bbox`  | Begrenzungsbox         |
 | `Box`               | ✅         | ✅           | `Feature` + `bbox`  | 2D/3D-Box              |
 | `Curve`             | ❌         | ✅           | `LineString`        | Kurve mit Segmenten    |
-| `Surface`           | ❌         | ✅           | `MultiPolygon`      | 3D-Oberfläche          |
-| `MultiSurface`      | ❌         | ✅           | `MultiPolygon`      | Sammlung von Flächen   |
-| `MultiPoint`        | ✅         | ✅           | `MultiPoint`        | Sammlung von Punkten   |
-| `MultiLineString`   | ✅         | ✅           | `MultiLineString`   | Sammlung von Linien    |
-| `MultiPolygon`      | ✅         | ✅           | `MultiPolygon`      | Sammlung von Polygonen |
-| `FeatureCollection` | ✅         | ✅           | `FeatureCollection` | Sammlung von Features  |
+| `Surface`           | ❌         | ✅           | `MultiPolygon`      | 3D-Oberfläche               |
+| `MultiSurface`      | ❌         | ✅           | `MultiPolygon`      | Sammlung von Flächen        |
+| `MultiPoint`        | ✅         | ✅           | `MultiPoint`        | Sammlung von Punkten        |
+| `MultiLineString`   | ✅         | ✅           | `MultiLineString`   | Sammlung von Linien         |
+| `MultiPolygon`      | ✅         | ✅           | `MultiPolygon`      | Sammlung von Polygonen      |
+| `FeatureCollection` | ✅         | ✅           | `FeatureCollection` | Sammlung von Features       |
+| `RectifiedGridCoverage` | ❌    | ✅           | `Feature`           | Georef. Grid mit Transformation |
+| `GridCoverage`      | ❌         | ✅           | `Feature`           | Nicht-georef. Grid          |
+| `ReferenceableGridCoverage` | ❌ | ✅          | `Feature`           | Unregelmäßig georef. Grid   |
+| `MultiPointCoverage` | ❌        | ✅           | `Feature`           | Coverage mit MultiPoint-Domäne |
 
 ---
 ## 🛠 CLI-Tool (Docker)

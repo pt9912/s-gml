@@ -1,4 +1,4 @@
-import { Builder, GmlPoint, GmlLineString, GmlPolygon, GmlLinearRing, GmlEnvelope, GmlBox, GmlCurve, GmlSurface, GmlMultiPoint, GmlMultiLineString, GmlMultiPolygon, Geometry, Feature, FeatureCollection, GmlFeature, GmlFeatureCollection, GmlGeometry } from '../types.js';
+import { Builder, GmlPoint, GmlLineString, GmlPolygon, GmlLinearRing, GmlEnvelope, GmlBox, GmlCurve, GmlSurface, GmlMultiPoint, GmlMultiLineString, GmlMultiPolygon, Geometry, Feature, FeatureCollection, GmlFeature, GmlFeatureCollection, GmlGeometry, GmlRectifiedGridCoverage, GmlGridCoverage, GmlReferenceableGridCoverage, GmlMultiPointCoverage } from '../types.js';
 
 export class GeoJsonBuilder implements Builder {
     buildPoint(gml: GmlPoint): Geometry {
@@ -74,6 +74,220 @@ export class GeoJsonBuilder implements Builder {
             type: 'MultiPolygon',
             coordinates: gml.patches.map(patch => patch.coordinates),
         };
+    }
+
+    buildRectifiedGridCoverage(gml: GmlRectifiedGridCoverage): Feature {
+        // Create geometry from boundedBy if available
+        let geometry: Geometry | null = null;
+        let bbox: number[] | undefined;
+
+        if (gml.boundedBy) {
+            bbox = gml.boundedBy.bbox;
+            geometry = {
+                type: 'Polygon',
+                coordinates: [
+                    [
+                        [bbox[0], bbox[1]],
+                        [bbox[2], bbox[1]],
+                        [bbox[2], bbox[3]],
+                        [bbox[0], bbox[3]],
+                        [bbox[0], bbox[1]],
+                    ],
+                ],
+            };
+        }
+
+        // Build properties with all Coverage metadata
+        const properties: any = {
+            coverageType: 'RectifiedGridCoverage',
+            grid: {
+                dimension: gml.domainSet.dimension,
+                srsName: gml.domainSet.srsName,
+                limits: gml.domainSet.limits,
+                axisLabels: gml.domainSet.axisLabels,
+                origin: gml.domainSet.origin,
+                offsetVectors: gml.domainSet.offsetVectors,
+            },
+        };
+
+        if (gml.rangeType) {
+            properties.rangeType = gml.rangeType;
+        }
+
+        if (gml.rangeSet.file) {
+            properties.dataFile = gml.rangeSet.file;
+        }
+
+        const feature: Feature = {
+            type: 'Feature',
+            geometry: geometry || { type: 'Point', coordinates: gml.domainSet.origin },
+            properties,
+        };
+
+        if (gml.id) {
+            feature.id = gml.id;
+        }
+
+        if (bbox && bbox.length === 4) {
+            feature.bbox = bbox as [number, number, number, number];
+        }
+
+        return feature;
+    }
+
+    buildGridCoverage(gml: GmlGridCoverage): Feature {
+        // Create geometry from boundedBy if available
+        let geometry: Geometry | null = null;
+        let bbox: number[] | undefined;
+
+        if (gml.boundedBy) {
+            bbox = gml.boundedBy.bbox;
+            geometry = {
+                type: 'Polygon',
+                coordinates: [
+                    [
+                        [bbox[0], bbox[1]],
+                        [bbox[2], bbox[1]],
+                        [bbox[2], bbox[3]],
+                        [bbox[0], bbox[3]],
+                        [bbox[0], bbox[1]],
+                    ],
+                ],
+            };
+        }
+
+        // Build properties with all Coverage metadata
+        const properties: any = {
+            coverageType: 'GridCoverage',
+            grid: {
+                dimension: gml.domainSet.dimension,
+                limits: gml.domainSet.limits,
+                axisLabels: gml.domainSet.axisLabels,
+            },
+        };
+
+        if (gml.rangeType) {
+            properties.rangeType = gml.rangeType;
+        }
+
+        if (gml.rangeSet.file) {
+            properties.dataFile = gml.rangeSet.file;
+        }
+
+        const feature: Feature = {
+            type: 'Feature',
+            geometry: geometry || { type: 'Point', coordinates: [0, 0] },
+            properties,
+        };
+
+        if (gml.id) {
+            feature.id = gml.id;
+        }
+
+        if (bbox && bbox.length === 4) {
+            feature.bbox = bbox as [number, number, number, number];
+        }
+
+        return feature;
+    }
+
+    buildReferenceableGridCoverage(gml: GmlReferenceableGridCoverage): Feature {
+        // Create geometry from boundedBy if available
+        let geometry: Geometry | null = null;
+        let bbox: number[] | undefined;
+
+        if (gml.boundedBy) {
+            bbox = gml.boundedBy.bbox;
+            geometry = {
+                type: 'Polygon',
+                coordinates: [
+                    [
+                        [bbox[0], bbox[1]],
+                        [bbox[2], bbox[1]],
+                        [bbox[2], bbox[3]],
+                        [bbox[0], bbox[3]],
+                        [bbox[0], bbox[1]],
+                    ],
+                ],
+            };
+        }
+
+        // Build properties with all Coverage metadata
+        const properties: any = {
+            coverageType: 'ReferenceableGridCoverage',
+            grid: {
+                dimension: gml.domainSet.dimension,
+                limits: gml.domainSet.limits,
+                axisLabels: gml.domainSet.axisLabels,
+            },
+        };
+
+        if (gml.rangeType) {
+            properties.rangeType = gml.rangeType;
+        }
+
+        if (gml.rangeSet.file) {
+            properties.dataFile = gml.rangeSet.file;
+        }
+
+        const feature: Feature = {
+            type: 'Feature',
+            geometry: geometry || { type: 'Point', coordinates: [0, 0] },
+            properties,
+        };
+
+        if (gml.id) {
+            feature.id = gml.id;
+        }
+
+        if (bbox && bbox.length === 4) {
+            feature.bbox = bbox as [number, number, number, number];
+        }
+
+        return feature;
+    }
+
+    buildMultiPointCoverage(gml: GmlMultiPointCoverage): Feature {
+        // Use MultiPoint as geometry
+        const geometry: Geometry = this.buildMultiPoint(gml.domainSet);
+        let bbox: number[] | undefined;
+
+        if (gml.boundedBy) {
+            bbox = gml.boundedBy.bbox;
+        }
+
+        // Build properties with Coverage metadata
+        const properties: any = {
+            coverageType: 'MultiPointCoverage',
+            points: {
+                count: gml.domainSet.coordinates.length,
+                srsName: gml.domainSet.srsName,
+            },
+        };
+
+        if (gml.rangeType) {
+            properties.rangeType = gml.rangeType;
+        }
+
+        if (gml.rangeSet.file) {
+            properties.dataFile = gml.rangeSet.file;
+        }
+
+        const feature: Feature = {
+            type: 'Feature',
+            geometry,
+            properties,
+        };
+
+        if (gml.id) {
+            feature.id = gml.id;
+        }
+
+        if (bbox && bbox.length === 4) {
+            feature.bbox = bbox as [number, number, number, number];
+        }
+
+        return feature;
     }
 
     buildFeature(gml: GmlFeature): Feature {

@@ -1,7 +1,7 @@
 export * from './types.js';
 export { GmlParser } from './parser.js';
 export { validateGml } from './validator.browser.js';
-export { getBuilder } from './builders/index.js';
+export { getBuilder, GeoJsonBuilder, CisJsonBuilder, CoverageJsonBuilder } from './builders/index.js';
 export {
     OwsException,
     OwsExceptionReport,
@@ -9,3 +9,9 @@ export {
     isOwsExceptionReport,
     parseOwsExceptionReport,
 } from './ows-exception.js';
+export {
+    GeoTiffMetadata,
+    extractGeoTiffMetadata,
+    pixelToWorld,
+    worldToPixel,
+} from './utils/geotiff-metadata.js';
