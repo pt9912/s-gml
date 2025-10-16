@@ -267,6 +267,36 @@ const parsedCoverage = await parser.parse(originalXml);
 // Extrahiere Coverage-Objekt aus GeoJSON...
 const regeneratedXml = generateCoverageXml(coverageObject);
 // Ergibt wieder valides WCS 2.0 XML!
+
+// ReferenceableGridCoverage mit unregelmäßigem Georeferencing
+const irregularCoverage = {
+  type: 'ReferenceableGridCoverage',
+  id: 'MODIS_LST',
+  boundedBy: {
+    type: 'Envelope',
+    bbox: [-180, -90, 180, 90],
+    srsName: 'EPSG:4326',
+    version: '3.2'
+  },
+  domainSet: {
+    dimension: 2,
+    limits: { low: [0, 0], high: [719, 359] },
+    axisLabels: ['lon', 'lat']
+  },
+  rangeSet: {
+    file: { fileName: 'modis_lst.hdf', fileStructure: 'HDF' }
+  },
+  rangeType: {
+    field: [
+      { name: 'LST_Day', dataType: 'uint16', uom: 'K', description: 'Daytime Land Surface Temperature' },
+      { name: 'LST_Night', dataType: 'uint16', uom: 'K', description: 'Nighttime Land Surface Temperature' }
+    ]
+  },
+  version: '3.2'
+};
+
+const modisXml = generateCoverageXml(irregularCoverage, true);
+// <gml:ReferenceableGridCoverage xmlns:gml="..." gml:id="MODIS_LST">...</gml:ReferenceableGridCoverage>
 ```
 
 ### GML Versionen konvertieren
