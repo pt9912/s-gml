@@ -10,6 +10,7 @@ import type {
     GmlRectifiedGrid,
     GmlGrid,
     GmlMultiPoint,
+    GmlTemporalAxis,
 } from '../types.js';
 
 /**
@@ -79,6 +80,11 @@ export class CoverageGenerator {
             parts.push(this.generateRangeType(coverage.rangeType));
         }
 
+        // temporal axis
+        if (coverage.temporal) {
+            parts.push(this.generateTemporalAxis(coverage.temporal));
+        }
+
         parts.push('</gml:RectifiedGridCoverage>');
 
         return parts.join('');
@@ -112,6 +118,11 @@ export class CoverageGenerator {
             parts.push(this.generateRangeType(coverage.rangeType));
         }
 
+        // temporal axis
+        if (coverage.temporal) {
+            parts.push(this.generateTemporalAxis(coverage.temporal));
+        }
+
         parts.push('</gml:GridCoverage>');
 
         return parts.join('');
@@ -143,6 +154,11 @@ export class CoverageGenerator {
         // rangeType
         if (coverage.rangeType) {
             parts.push(this.generateRangeType(coverage.rangeType));
+        }
+
+        // temporal axis
+        if (coverage.temporal) {
+            parts.push(this.generateTemporalAxis(coverage.temporal));
         }
 
         parts.push('</gml:ReferenceableGridCoverage>');
@@ -325,6 +341,28 @@ export class CoverageGenerator {
 
         parts.push('</swe:DataRecord>');
         parts.push('</gmlcov:rangeType>');
+
+        return parts.join('');
+    }
+
+    private generateTemporalAxis(temporal: GmlTemporalAxis): string {
+        const parts = [
+            '<gmlcov:metadata>',
+            '<gmlcov:Extension>',
+            `<gml:timePosition>${this.escapeXml(temporal.startTime)}</gml:timePosition>`,
+            `<gml:timePosition>${this.escapeXml(temporal.endTime)}</gml:timePosition>`,
+        ];
+
+        if (temporal.resolution) {
+            parts.push(`<gml:timeResolution>${this.escapeXml(temporal.resolution)}</gml:timeResolution>`);
+        }
+
+        if (temporal.uom) {
+            parts.push(`<gml:uom>${this.escapeXml(temporal.uom)}</gml:uom>`);
+        }
+
+        parts.push('</gmlcov:Extension>');
+        parts.push('</gmlcov:metadata>');
 
         return parts.join('');
     }

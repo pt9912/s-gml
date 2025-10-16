@@ -480,4 +480,160 @@ describe('Coverage Generator', () => {
             expect(xml).not.toContain('test<>&"\'');
         });
     });
+
+    describe('Time-series Coverage', () => {
+        it('should generate RectifiedGridCoverage with temporal axis', () => {
+            const coverage: GmlRectifiedGridCoverage = {
+                type: 'RectifiedGridCoverage',
+                id: 'LANDSAT_TIMESERIES',
+                boundedBy: {
+                    type: 'Envelope',
+                    bbox: [-120, 30, -110, 40],
+                    srsName: 'EPSG:4326',
+                    version: '3.2',
+                },
+                domainSet: {
+                    dimension: 2,
+                    srsName: 'EPSG:4326',
+                    limits: { low: [0, 0], high: [1000, 1000] },
+                    axisLabels: ['x', 'y'],
+                    origin: [30, -120],
+                    offsetVectors: [[0.01, 0], [0, 0.01]],
+                },
+                rangeSet: {
+                    file: { fileName: 'landsat_series.nc', fileStructure: 'netCDF' },
+                },
+                temporal: {
+                    axisLabel: 'time',
+                    startTime: '2024-01-01T00:00:00Z',
+                    endTime: '2024-12-31T23:59:59Z',
+                    resolution: 'P16D', // 16 days (Landsat revisit time)
+                    uom: 'ISO8601',
+                },
+                version: '3.2',
+            };
+
+            const xml = generator.generate(coverage);
+
+            expect(xml).toContain('<gml:RectifiedGridCoverage');
+            expect(xml).toContain('gml:id="LANDSAT_TIMESERIES"');
+            expect(xml).toContain('<gmlcov:metadata>');
+            expect(xml).toContain('<gmlcov:Extension>');
+            expect(xml).toContain('<gml:timePosition>2024-01-01T00:00:00Z</gml:timePosition>');
+            expect(xml).toContain('<gml:timePosition>2024-12-31T23:59:59Z</gml:timePosition>');
+            expect(xml).toContain('<gml:timeResolution>P16D</gml:timeResolution>');
+            expect(xml).toContain('<gml:uom>ISO8601</gml:uom>');
+        });
+
+        it('should generate GridCoverage with hourly temporal resolution', () => {
+            const coverage: GmlGridCoverage = {
+                type: 'GridCoverage',
+                id: 'WEATHER_FORECAST',
+                domainSet: {
+                    dimension: 2,
+                    limits: { low: [0, 0], high: [720, 360] },
+                    axisLabels: ['lon', 'lat'],
+                },
+                rangeSet: {
+                    file: { fileName: 'weather_forecast.grib2' },
+                },
+                rangeType: {
+                    field: [
+                        { name: 'temperature', dataType: 'float32', uom: 'K', description: 'Air temperature 2m above ground' },
+                        { name: 'precipitation', dataType: 'float32', uom: 'kg/m2', description: 'Total precipitation' },
+                    ],
+                },
+                temporal: {
+                    axisLabel: 'time',
+                    startTime: '2024-10-16T00:00:00Z',
+                    endTime: '2024-10-23T00:00:00Z',
+                    resolution: 'PT1H', // 1 hour
+                    uom: 'ISO8601',
+                },
+                version: '3.2',
+            };
+
+            const xml = generator.generate(coverage);
+
+            expect(xml).toContain('<gml:GridCoverage');
+            expect(xml).toContain('<gmlcov:metadata>');
+            expect(xml).toContain('<gml:timePosition>2024-10-16T00:00:00Z</gml:timePosition>');
+            expect(xml).toContain('<gml:timePosition>2024-10-23T00:00:00Z</gml:timePosition>');
+            expect(xml).toContain('<gml:timeResolution>PT1H</gml:timeResolution>');
+            expect(xml).toContain('<swe:field name="temperature">');
+            expect(xml).toContain('<swe:field name="precipitation">');
+        });
+
+        it('should generate ReferenceableGridCoverage with daily temporal resolution', () => {
+            const coverage: GmlReferenceableGridCoverage = {
+                type: 'ReferenceableGridCoverage',
+                id: 'SST_TIMESERIES',
+                boundedBy: {
+                    type: 'Envelope',
+                    bbox: [-180, -90, 180, 90],
+                    srsName: 'EPSG:4326',
+                    version: '3.2',
+                },
+                domainSet: {
+                    dimension: 2,
+                    limits: { low: [0, 0], high: [3600, 1800] },
+                    axisLabels: ['lon', 'lat'],
+                },
+                rangeSet: {
+                    file: { fileName: 'sst_daily.nc', fileStructure: 'netCDF' },
+                },
+                rangeType: {
+                    field: [
+                        { name: 'sea_surface_temperature', dataType: 'float32', uom: 'K', description: 'Sea Surface Temperature' },
+                    ],
+                },
+                temporal: {
+                    axisLabel: 'time',
+                    startTime: '2024-01-01T00:00:00Z',
+                    endTime: '2024-12-31T00:00:00Z',
+                    resolution: 'P1D', // 1 day
+                },
+                version: '3.2',
+            };
+
+            const xml = generator.generate(coverage);
+
+            expect(xml).toContain('<gml:ReferenceableGridCoverage');
+            expect(xml).toContain('gml:id="SST_TIMESERIES"');
+            expect(xml).toContain('<gmlcov:metadata>');
+            expect(xml).toContain('<gml:timePosition>2024-01-01T00:00:00Z</gml:timePosition>');
+            expect(xml).toContain('<gml:timePosition>2024-12-31T00:00:00Z</gml:timePosition>');
+            expect(xml).toContain('<gml:timeResolution>P1D</gml:timeResolution>');
+            expect(xml).not.toContain('<gml:uom>'); // uom not provided
+        });
+
+        it('should generate time-series coverage without optional fields', () => {
+            const coverage: GmlGridCoverage = {
+                type: 'GridCoverage',
+                id: 'SIMPLE_TIMESERIES',
+                domainSet: {
+                    dimension: 2,
+                    limits: { low: [0, 0], high: [100, 100] },
+                },
+                rangeSet: {
+                    file: { fileName: 'data.nc' },
+                },
+                temporal: {
+                    axisLabel: 't',
+                    startTime: '2024-01-01T00:00:00Z',
+                    endTime: '2024-01-31T23:59:59Z',
+                    // resolution and uom are optional
+                },
+                version: '3.2',
+            };
+
+            const xml = generator.generate(coverage);
+
+            expect(xml).toContain('<gmlcov:metadata>');
+            expect(xml).toContain('<gml:timePosition>2024-01-01T00:00:00Z</gml:timePosition>');
+            expect(xml).toContain('<gml:timePosition>2024-01-31T23:59:59Z</gml:timePosition>');
+            expect(xml).not.toContain('<gml:timeResolution>');
+            expect(xml).not.toContain('<gml:uom>');
+        });
+    });
 });

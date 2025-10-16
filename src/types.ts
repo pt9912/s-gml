@@ -120,6 +120,19 @@ export interface GmlRangeType {
     }>;
 }
 
+// Temporal axis support for time-series coverages
+export interface GmlTemporalAxis {
+    axisLabel: string; // e.g., "time", "t", "temporal"
+    startTime: string; // ISO 8601 timestamp (e.g., "2024-01-01T00:00:00Z")
+    endTime: string;   // ISO 8601 timestamp
+    resolution?: string; // ISO 8601 duration (e.g., "P1D" for 1 day, "PT1H" for 1 hour)
+    uom?: string; // Unit of measure (e.g., "ISO8601", "seconds", "days")
+}
+
+export interface GmlTemporalDomain {
+    temporal: GmlTemporalAxis;
+}
+
 export interface GmlRectifiedGridCoverage {
     type: 'RectifiedGridCoverage';
     id?: string;
@@ -127,6 +140,7 @@ export interface GmlRectifiedGridCoverage {
     domainSet: GmlRectifiedGrid;
     rangeSet: GmlRangeSet;
     rangeType?: GmlRangeType;
+    temporal?: GmlTemporalAxis; // Optional temporal axis for time-series
     version: GmlVersion;
 }
 
@@ -137,6 +151,7 @@ export interface GmlGridCoverage {
     domainSet: GmlGrid;
     rangeSet: GmlRangeSet;
     rangeType?: GmlRangeType;
+    temporal?: GmlTemporalAxis; // Optional temporal axis for time-series
     version: GmlVersion;
 }
 
@@ -147,6 +162,7 @@ export interface GmlReferenceableGridCoverage {
     domainSet: GmlGrid; // Extended with georeferencing info
     rangeSet: GmlRangeSet;
     rangeType?: GmlRangeType;
+    temporal?: GmlTemporalAxis; // Optional temporal axis for time-series
     version: GmlVersion;
 }
 
