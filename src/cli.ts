@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-import { GmlParser, OwsExceptionError } from './index.js';
+import { GmlParser, OwsExceptionError, getBuilder, ShapefileBuilder } from './index.js';
 import { validateGml } from './validator.node.js';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { Command } from 'commander';
+
+type OutputFormat = 'geojson' | 'shapefile' | 'shp' | 'csv' | 'kml' | 'wkt' | 'cis-json' | 'coveragejson';
 
 /**
  * Checks if a string is a URL
@@ -33,30 +35,128 @@ async function fetchInput(input: string): Promise<string> {
     }
 }
 
+/**
+ * Write output based on format
+ */
+async function writeOutput(result: any, format: OutputFormat, outputPath?: string): Promise<void> {
+    if (format === 'shapefile' || format === 'shp') {
+        // Shapefile returns a Buffer/Blob, write as binary
+        if (!outputPath) {
+            console.error('Error: --output is required for Shapefile format');
+            process.exit(1);
+        }
+
+        writeFileSync(outputPath, result);
+        console.log(`Successfully wrote Shapefile ZIP to ${outputPath}`);
+    } else if (format === 'geojson' || format === 'cis-json' || format === 'coveragejson') {
+        // JSON formats
+        const jsonOutput = JSON.stringify(result, null, 2);
+        if (outputPath) {
+            const formatName = format === 'geojson' ? 'GeoJSON' :
+                format === 'cis-json' ? 'CIS JSON' :
+                    'CoverageJSON';
+            writeFileSync(outputPath, jsonOutput);
+            console.log(`Successfully wrote ${formatName} to ${outputPath}`);
+        } else {
+            console.log(jsonOutput);
+        }
+    } else if (format === 'csv') {
+        // CSV can return either string (FeatureCollection) or CsvOutput object
+        let csvString: string;
+        if (typeof result === 'string') {
+            csvString = result;
+        } else if (result && typeof result === 'object' && result.type === 'CSV') {
+            // CsvOutput object - convert to string
+            const headers = result.headers.join(',');
+            const rows = result.rows.map((row: any) =>
+                result.headers.map((h: string) => {
+                    const value = row[h];
+                    if (value === null || value === undefined) return '';
+                    const str = String(value);
+                    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                        return `"${str.replace(/"/g, '""')}"`;
+                    }
+                    return str;
+                }).join(',')
+            ).join('\n');
+            csvString = `${headers}\n${rows}`;
+        } else {
+            console.error('Error: Unexpected CSV output format');
+            process.exit(1);
+        }
+
+        if (outputPath) {
+            writeFileSync(outputPath, csvString);
+            console.log(`Successfully wrote CSV to ${outputPath}`);
+        } else {
+            console.log(csvString);
+        }
+    } else {
+        // Text formats (KML, WKT)
+        if (outputPath) {
+            const formatName = format === 'kml' ? 'KML' : 'WKT';
+            writeFileSync(outputPath, result);
+            console.log(`Successfully wrote ${formatName} to ${outputPath}`);
+        } else {
+            console.log(result);
+        }
+    }
+}
+
 export function buildProgram(): Command {
     const program = new Command();
 
     program
         .name('s-gml')
         .description('CLI tool for parsing, converting, and validating GML files')
-        .version('1.1.4', '-V, --version')
+        .version('1.5.0', '-V, --version')
         .option('--verbose', 'Show detailed error messages with stack traces');
 
     program
         .command('parse <input>')
-        .description('Parse GML to GeoJSON (supports local files and URLs)')
-        .option('--output <file>', 'Output file (default: stdout)')
+        .description('Parse GML to various formats (supports local files and URLs)')
+        .option('--output <file>', 'Output file (default: stdout, required for Shapefile)')
+        .option('--format <format>', 'Output format: geojson, shapefile, csv, kml, wkt, cis-json, coveragejson (default: geojson)', 'geojson')
         .action(async (input, options, command) => {
             try {
-                const parser = new GmlParser();
-                const gml = await fetchInput(input);
-                const geojson = await parser.parse(gml);
-                if (options.output) {
-                    writeFileSync(options.output, JSON.stringify(geojson, null, 2));
-                    console.log(`Successfully wrote GeoJSON to ${options.output}`);
-                } else {
-                    console.log(JSON.stringify(geojson, null, 2));
+                const format = options.format as OutputFormat;
+                const validFormats = ['geojson', 'shapefile', 'shp', 'csv', 'kml', 'wkt', 'cis-json', 'coveragejson'];
+
+                if (!validFormats.includes(format)) {
+                    console.error(`Error: Invalid format '${format}'. Valid formats: ${validFormats.join(', ')}`);
+                    process.exit(1);
                 }
+
+                // Fetch and parse GML
+                const gml = await fetchInput(input);
+
+                // Parse with appropriate builder
+                let result: any;
+
+                if (format === 'shapefile' || format === 'shp') {
+                    // ShapefileBuilder returns GeoJSON (delegates to GeoJsonBuilder)
+                    // We then use toZip() to convert the GeoJSON to Shapefile ZIP
+                    const builder = new ShapefileBuilder();
+                    const parser = new GmlParser(builder);
+                    const geojson = await parser.parse(gml);
+
+                    // Convert GeoJSON to Shapefile ZIP
+                    result = await builder.toZip(geojson as any, {
+                        outputType: 'arraybuffer',
+                        filename: 'shapefile'
+                    });
+
+                    // Convert ArrayBuffer to Buffer for Node.js
+                    result = Buffer.from(result);
+                } else {
+                    // Use appropriate builder - the parser now correctly uses builders for everything
+                    const builder = getBuilder(format);
+                    const parser = new GmlParser(builder);
+                    result = await parser.parse(gml);
+                }
+
+                // Write output
+                await writeOutput(result, format, options.output);
             } catch (error) {
                 const verbose = command.parent?.opts().verbose;
 
