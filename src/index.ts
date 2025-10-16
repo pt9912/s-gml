@@ -1,5 +1,17 @@
 export * from './types.js';
 export { GmlParser } from './parser.js';
+export { StreamingGmlParser, parseGmlStream, type StreamingParserOptions, type FeatureCallback } from './streaming-parser.js';
+export {
+    PerformanceMonitor,
+    BatchProcessor,
+    processBatch,
+    clearPerformanceCaches,
+    getCacheStats,
+    internString,
+    parseCoordinatesOptimized,
+    releaseCoordinates,
+    type PerformanceReport,
+} from './performance.js';
 export { validateGml } from './validator.browser.js';
 export {
     getBuilder,
