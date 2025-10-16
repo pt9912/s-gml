@@ -1,7 +1,21 @@
 export * from './types.js';
 export { GmlParser } from './parser.js';
 export { validateGml } from './validator.browser.js';
-export { getBuilder, GeoJsonBuilder, CisJsonBuilder, CoverageJsonBuilder } from './builders/index.js';
+export {
+    getBuilder,
+    GeoJsonBuilder,
+    CisJsonBuilder,
+    CoverageJsonBuilder,
+    CsvBuilder,
+    KmlBuilder,
+    WktBuilder,
+    wktCollectionToJson,
+    wktCollectionToCsv,
+    type CsvRow,
+    type CsvOutput,
+    type WktFeature,
+    type WktCollection,
+} from './builders/index.js';
 export {
     OwsException,
     OwsExceptionReport,

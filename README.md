@@ -14,6 +14,7 @@ inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-/WCS-Unterstützung und
 | Feature                    | Beschreibung                                          |
 | -------------------------- | ----------------------------------------------------- |
 | **GML → GeoJSON**          | Parsen aller GML-Elemente nach GeoJSON                |
+| **Zusätzliche Output-Formate** | CSV (WKT), KML (Google Earth), WKT (Well-Known Text) |
 | **Coverage-Unterstützung** | RectifiedGridCoverage, GridCoverage, MultiPointCoverage + GeoTIFF-Metadaten |
 | **JSON-Coverage-Formate**  | CIS JSON + CoverageJSON (beide OGC-Standards)         |
 | **WCS 2.0 XML Generator**  | Coverage → WCS 2.0 XML mit Multi-band RangeType       |
@@ -595,6 +596,158 @@ console.log(wcs11Caps.version); // '1.1.0'
 console.log(wcs11Caps.coverages[0].coverageId); // 'TEST_COVERAGE'
 ```
 
+### GML zu CSV konvertieren
+```typescript
+import { GmlParser, CsvBuilder } from '@npm9912/s-gml';
+
+// CSV Builder mit WKT-Geometrien
+const parser = new GmlParser(new CsvBuilder());
+
+// FeatureCollection zu CSV
+const featureCollectionGml = `
+<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0"
+                        xmlns:gml="http://www.opengis.net/gml/3.2">
+  <wfs:member>
+    <Feature gml:id="F1">
+      <geometry>
+        <gml:Point><gml:pos>10 20</gml:pos></gml:Point>
+      </geometry>
+      <name>Location A</name>
+      <value>100</value>
+    </Feature>
+  </wfs:member>
+  <wfs:member>
+    <Feature gml:id="F2">
+      <geometry>
+        <gml:Point><gml:pos>15 25</gml:pos></gml:Point>
+      </geometry>
+      <name>Location B</name>
+      <value>200</value>
+    </Feature>
+  </wfs:member>
+</wfs:FeatureCollection>`;
+
+const csv = await parser.parse(featureCollectionGml);
+console.log(csv);
+/* Ausgabe:
+id,geometry,name,value
+F1,POINT (10 20),Location A,100
+F2,POINT (15 25),Location B,200
+*/
+
+// Direkt mit getBuilder
+import { getBuilder } from '@npm9912/s-gml';
+const csvParser = new GmlParser(getBuilder('csv'));
+const csvOutput = await csvParser.parse(gmlXml);
+```
+
+### GML zu KML konvertieren (Google Earth)
+```typescript
+import { GmlParser, KmlBuilder } from '@npm9912/s-gml';
+
+// KML Builder für Google Earth
+const parser = new GmlParser(new KmlBuilder());
+
+// FeatureCollection zu KML
+const featureCollectionGml = `
+<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0"
+                        xmlns:gml="http://www.opengis.net/gml/3.2">
+  <wfs:member>
+    <Feature gml:id="F1">
+      <geometry>
+        <gml:Point><gml:pos>10 20</gml:pos></gml:Point>
+      </geometry>
+      <name>Sehenswürdigkeit</name>
+      <description>Interessanter Ort</description>
+    </Feature>
+  </wfs:member>
+</wfs:FeatureCollection>`;
+
+const kml = await parser.parse(featureCollectionGml);
+console.log(kml);
+/* Ausgabe:
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+  <name>GML Feature Collection</name>
+  <description>Converted from GML 3.2</description>
+  <Placemark>
+    <name>Sehenswürdigkeit</name>
+    <description><![CDATA[<table>
+      <tr><th>name</th><td>Sehenswürdigkeit</td></tr>
+      <tr><th>description</th><td>Interessanter Ort</td></tr>
+    </table>]]></description>
+    <Point><coordinates>10,20</coordinates></Point>
+  </Placemark>
+</Document>
+</kml>
+*/
+
+// KML-Datei für Google Earth speichern
+import { writeFileSync } from 'fs';
+writeFileSync('output.kml', kml);
+```
+
+### GML zu WKT konvertieren (Well-Known Text)
+```typescript
+import { GmlParser, WktBuilder, wktCollectionToCsv } from '@npm9912/s-gml';
+
+// WKT Builder
+const parser = new GmlParser(new WktBuilder());
+
+// Point zu WKT
+const pointGml = `<gml:Point xmlns:gml="http://www.opengis.net/gml/3.2"><gml:pos>10 20</gml:pos></gml:Point>`;
+const pointWkt = await parser.parse(pointGml);
+console.log(pointWkt); // "POINT (10 20)"
+
+// Polygon zu WKT
+const polygonGml = `
+<gml:Polygon xmlns:gml="http://www.opengis.net/gml/3.2">
+  <gml:exterior>
+    <gml:LinearRing>
+      <gml:posList>0 0 10 0 10 10 0 10 0 0</gml:posList>
+    </gml:LinearRing>
+  </gml:exterior>
+</gml:Polygon>`;
+const polygonWkt = await parser.parse(polygonGml);
+console.log(polygonWkt); // "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"
+
+// FeatureCollection zu WKT Collection
+const featureCollectionWkt = await parser.parse(featureCollectionGml);
+console.log(featureCollectionWkt);
+/* {
+  features: [
+    {
+      id: 'F1',
+      wkt: 'POINT (10 20)',
+      properties: { name: 'Location A', value: 100 }
+    },
+    {
+      id: 'F2',
+      wkt: 'POINT (15 25)',
+      properties: { name: 'Location B', value: 200 }
+    }
+  ]
+} */
+
+// WKT Collection zu CSV konvertieren
+const wktCsv = wktCollectionToCsv(featureCollectionWkt);
+console.log(wktCsv);
+/* Ausgabe:
+id,wkt,name,value
+F1,POINT (10 20),Location A,100
+F2,POINT (15 25),Location B,200
+*/
+
+// Für PostGIS/QGIS/ArcGIS verwenden
+import { Pool } from 'pg';
+const pool = new Pool();
+await pool.query(
+  `INSERT INTO locations (name, geometry) VALUES ($1, ST_GeomFromText($2, 4326))`,
+  ['Location A', pointWkt]
+);
+```
+
 ### GML Versionen konvertieren
 ```typescript
 const parser = new GmlParser();
@@ -723,6 +876,107 @@ docker run --rm s-gml-cli validate https://example.com/data.gml --gml-version 3.
   prettyPrint?: boolean,         // Formatiertes XML
   inputVersion?: '2.1.2' | '3.0' | '3.2' // Manuelle Versionsangabe
 }
+```
+
+### Output Builder
+
+Die Bibliothek unterstützt verschiedene Output-Formate durch Builder-Klassen:
+
+#### Verfügbare Builder
+
+| Builder | Format | Beschreibung | Verwendung |
+| ------- | ------ | ------------ | ---------- |
+| `GeoJsonBuilder` | GeoJSON | Standard-Format für Web-GIS | `new GmlParser()` oder `new GmlParser('geojson')` |
+| `CsvBuilder` | CSV + WKT | Tabelle mit WKT-Geometrien | `new GmlParser('csv')` |
+| `KmlBuilder` | KML | Google Earth / Maps | `new GmlParser('kml')` |
+| `WktBuilder` | WKT | Well-Known Text | `new GmlParser('wkt')` |
+| `CisJsonBuilder` | CIS JSON | OGC Coverage Implementation Schema | `new GmlParser('cis-json')` |
+| `CoverageJsonBuilder` | CoverageJSON | OGC Community Standard | `new GmlParser('coveragejson')` |
+
+#### CsvBuilder
+
+Konvertiert GML zu CSV mit WKT-Geometrien:
+
+```typescript
+import { CsvBuilder, GmlParser } from '@npm9912/s-gml';
+
+const parser = new GmlParser(new CsvBuilder());
+const csv = await parser.parse(featureCollectionGml);
+// Gibt CSV-String zurück mit Spalten: id, geometry (WKT), properties...
+```
+
+**Rückgabetypen:**
+- Geometrien: `string` (WKT format)
+- Features: `CsvOutput` (headers + rows)
+- FeatureCollections: `string` (kompletter CSV-String)
+
+#### KmlBuilder
+
+Konvertiert GML zu KML (Google Earth):
+
+```typescript
+import { KmlBuilder, GmlParser } from '@npm9912/s-gml';
+
+const parser = new GmlParser(new KmlBuilder());
+const kml = await parser.parse(featureCollectionGml);
+// Gibt KML XML zurück, kompatibel mit Google Earth/Maps
+```
+
+**Features:**
+- ✅ Vollständige KML 2.2 Unterstützung
+- ✅ Placemarks mit Properties als HTML-Tabellen
+- ✅ 3D-Koordinaten (Altitude)
+- ✅ Styles und Beschreibungen
+- ✅ XML-Escaping für sichere Ausgabe
+
+**Rückgabetypen:**
+- Geometrien: `string` (KML Geometry)
+- Features: `string` (KML Placemark)
+- FeatureCollections: `string` (komplettes KML Document mit XML Header)
+
+#### WktBuilder
+
+Konvertiert GML zu Well-Known Text:
+
+```typescript
+import { WktBuilder, GmlParser, wktCollectionToCsv } from '@npm9912/s-gml';
+
+const parser = new GmlParser(new WktBuilder());
+const wkt = await parser.parse(pointGml);
+// Gibt WKT-String zurück: "POINT (10 20)"
+
+const collection = await parser.parse(featureCollectionGml);
+// Gibt WktCollection zurück mit features: [{ id, wkt, properties }]
+
+// Helper-Funktionen
+const csv = wktCollectionToCsv(collection);
+const json = wktCollectionToJson(collection, true);
+```
+
+**Features:**
+- ✅ OGC Simple Features WKT Standard
+- ✅ 2D und 3D Geometrien (WKT Z)
+- ✅ Alle Geometrie-Typen
+- ✅ PostGIS/QGIS/ArcGIS kompatibel
+- ✅ CSV-Export von WKT Collections
+
+**Rückgabetypen:**
+- Geometrien: `string` (WKT format)
+- Features: `WktFeature` ({ id, wkt, properties })
+- FeatureCollections: `WktCollection` ({ features: WktFeature[] })
+
+#### Helper: `getBuilder(format: string)`
+
+Gibt den passenden Builder für ein Format zurück:
+
+```typescript
+import { getBuilder, GmlParser } from '@npm9912/s-gml';
+
+const builder = getBuilder('csv');  // Gibt CsvBuilder zurück
+const parser = new GmlParser(builder);
+
+// Unterstützte Formate:
+// 'geojson', 'csv', 'kml', 'wkt', 'cis-json', 'coveragejson'
 ```
 
 ### Custom Builder erstellen
