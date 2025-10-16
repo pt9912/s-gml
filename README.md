@@ -14,7 +14,7 @@ inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-/WCS-Unterstützung und
 | Feature                    | Beschreibung                                          |
 | -------------------------- | ----------------------------------------------------- |
 | **GML → GeoJSON**          | Parsen aller GML-Elemente nach GeoJSON                |
-| **Zusätzliche Output-Formate** | CSV (WKT), KML (Google Earth), WKT (Well-Known Text) |
+| **Zusätzliche Output-Formate** | Shapefile, CSV (WKT), KML (Google Earth), WKT (Well-Known Text) |
 | **Coverage-Unterstützung** | RectifiedGridCoverage, GridCoverage, MultiPointCoverage + GeoTIFF-Metadaten |
 | **JSON-Coverage-Formate**  | CIS JSON + CoverageJSON (beide OGC-Standards)         |
 | **WCS 2.0 XML Generator**  | Coverage → WCS 2.0 XML mit Multi-band RangeType       |
@@ -752,6 +752,282 @@ await pool.query(
 );
 ```
 
+### GML zu Shapefile konvertieren (ESRI Shapefile)
+```typescript
+import { GmlParser, ShapefileBuilder, toShapefile } from '@npm9912/s-gml';
+
+// Shapefile Builder
+const parser = new GmlParser(new ShapefileBuilder());
+
+// FeatureCollection zu Shapefile ZIP
+const featureCollectionGml = `
+<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0"
+                        xmlns:gml="http://www.opengis.net/gml/3.2">
+  <wfs:member>
+    <Feature gml:id="F1">
+      <geometry>
+        <gml:Point><gml:pos>10 20</gml:pos></gml:Point>
+      </geometry>
+      <name>Location A</name>
+      <value>100</value>
+    </Feature>
+  </wfs:member>
+  <wfs:member>
+    <Feature gml:id="F2">
+      <geometry>
+        <gml:Polygon>
+          <gml:exterior>
+            <gml:LinearRing>
+              <gml:posList>0 0 10 0 10 10 0 10 0 0</gml:posList>
+            </gml:LinearRing>
+          </gml:exterior>
+        </gml:Polygon>
+      </geometry>
+      <name>Location B</name>
+      <value>200</value>
+    </Feature>
+  </wfs:member>
+</wfs:FeatureCollection>`;
+
+const featureCollection = await parser.parse(featureCollectionGml);
+
+// Als ZIP exportieren (Standard: Blob/Buffer)
+const builder = new ShapefileBuilder();
+const zipBlob = await builder.toZip(featureCollection);
+
+// ZIP-Datei speichern (Node.js)
+import { writeFileSync } from 'fs';
+writeFileSync('output.zip', zipBlob);
+
+// ZIP-Download im Browser
+const url = URL.createObjectURL(zipBlob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'shapefile.zip';
+a.click();
+```
+
+**Verschiedene Output-Formate:**
+
+```typescript
+// ArrayBuffer (für weitere Verarbeitung)
+const zipBuffer = await builder.toZip(featureCollection, {
+  outputType: 'arraybuffer'
+});
+
+// Base64 String (für API-Übertragung)
+const zipBase64 = await builder.toZip(featureCollection, {
+  outputType: 'base64'
+});
+
+// Blob/Buffer (Standard, plattformabhängig)
+const zipBlob = await builder.toZip(featureCollection, {
+  outputType: 'blob'
+});
+```
+
+**Shapefile-Optionen:**
+
+```typescript
+// Mit allen Optionen
+const zip = await builder.toZip(featureCollection, {
+  // Ordnername im ZIP
+  folder: 'my_layers',
+
+  // Dateiname für die Shapefile-Komponenten
+  filename: 'export',
+
+  // Output-Format
+  outputType: 'blob',
+
+  // Kompression (DEFLATE = komprimiert, STORE = unkomprimiert)
+  compression: 'DEFLATE',
+
+  // Custom Layer-Namen nach Geometrie-Typ
+  types: {
+    point: 'points_layer',
+    polygon: 'polygons_layer',
+    polyline: 'lines_layer'
+  },
+
+  // Custom Projektion (WKT-Format)
+  prj: ShapefileBuilder.getWebMercatorPrj(),
+
+  // Property-Namen auf 10 Zeichen kürzen (Shapefile-Limitation)
+  truncateFieldNames: true  // Standard: true
+});
+```
+
+**Property-Namen Truncation:**
+
+Shapefiles haben eine Limitation von 10 Zeichen für Property-Feldnamen. Standardmäßig werden längere Namen automatisch gekürzt:
+
+```typescript
+const featureCollection = {
+  type: 'FeatureCollection',
+  features: [{
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [10, 20] },
+    properties: {
+      'very_long_property_name': 'value1',  // → 'very_long_'
+      'another_long_name_here': 'value2',   // → 'another_lo'
+      'short': 'value3'                      // → 'short'
+    }
+  }]
+};
+
+// Automatische Kürzung (Standard)
+const zip1 = await builder.toZip(featureCollection, {
+  truncateFieldNames: true  // Standard-Verhalten
+});
+
+// Kürzung deaktivieren (kann zu Fehlern führen!)
+const zip2 = await builder.toZip(featureCollection, {
+  truncateFieldNames: false  // Nur verwenden, wenn alle Namen ≤ 10 Zeichen
+});
+```
+
+**Integration mit GmlParser:**
+
+```typescript
+// Direkter Export von GML zu Shapefile
+const gmlXml = `
+<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0"
+                        xmlns:gml="http://www.opengis.net/gml/3.2">
+  <wfs:member>
+    <TestFeature gml:id="F1">
+      <geometry>
+        <gml:Point><gml:pos>10 20</gml:pos></gml:Point>
+      </geometry>
+      <name>Test Location</name>
+    </TestFeature>
+  </wfs:member>
+</wfs:FeatureCollection>`;
+
+// Variante 1: Mit ShapefileBuilder
+const parser = new GmlParser(new ShapefileBuilder());
+const featureCollection = await parser.parse(gmlXml);
+const zip = await new ShapefileBuilder().toZip(featureCollection);
+
+// Variante 2: Mit getBuilder
+import { getBuilder } from '@npm9912/s-gml';
+const shpParser = new GmlParser(getBuilder('shapefile'));
+const fc = await shpParser.parse(gmlXml);
+```
+
+**Helper-Funktion:**
+
+```typescript
+import { toShapefile } from '@npm9912/s-gml';
+
+// Schneller Export ohne Builder-Instanz
+const zip = await toShapefile(featureCollection);
+
+// Mit Optionen
+const customZip = await toShapefile(featureCollection, {
+  filename: 'export',
+  outputType: 'base64',
+  types: {
+    point: 'locations',
+    polygon: 'areas'
+  }
+});
+```
+
+**Projektions-Helper:**
+
+```typescript
+// WGS84 Projektion (Standard für GPS-Daten)
+const wgs84Prj = ShapefileBuilder.getWgs84Prj();
+const zipWgs84 = await builder.toZip(featureCollection, {
+  prj: wgs84Prj
+});
+
+// Web Mercator Projektion (für Web-Karten)
+const webMercatorPrj = ShapefileBuilder.getWebMercatorPrj();
+const zipWebMercator = await builder.toZip(featureCollection, {
+  prj: webMercatorPrj
+});
+
+// Custom Projektion (eigener WKT-String)
+const customPrj = `PROJCS["UTM_Zone_33N",GEOGCS["GCS_WGS_1984",...]]`;
+const zipCustom = await builder.toZip(featureCollection, {
+  prj: customPrj
+});
+```
+
+**Unterstützte Geometrie-Typen:**
+
+```typescript
+// Alle GeoJSON-Geometrien werden unterstützt
+const mixedFeatures = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [10, 20] },
+      properties: { type: 'Point' }
+    },
+    {
+      type: 'Feature',
+      geometry: {
+        type: 'LineString',
+        coordinates: [[0, 0], [10, 10], [20, 20]]
+      },
+      properties: { type: 'Line' }
+    },
+    {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]
+      },
+      properties: { type: 'Polygon' }
+    },
+    {
+      type: 'Feature',
+      geometry: {
+        type: 'MultiPoint',
+        coordinates: [[0, 0], [5, 5], [10, 10]]
+      },
+      properties: { type: 'MultiPoint' }
+    }
+  ]
+};
+
+// Shapefile wird nach Geometrie-Typen in separate Layer aufgeteilt
+const zip = await builder.toZip(mixedFeatures);
+// Erzeugt: points.shp, lines.shp, polygons.shp (+ .shx, .dbf, .prj)
+```
+
+**Shapefile-Inhalt:**
+
+Das generierte ZIP enthält alle erforderlichen Shapefile-Komponenten:
+
+- `.shp` - Geometrie-Daten
+- `.shx` - Geometrie-Index
+- `.dbf` - Attribut-Tabelle
+- `.prj` - Projektions-Information (WKT)
+
+```typescript
+// Kompatibilität mit GIS-Software
+// ✅ QGIS
+// ✅ ArcGIS / ArcGIS Pro
+// ✅ GDAL/OGR
+// ✅ MapInfo
+// ✅ AutoCAD Map 3D
+// ✅ PostGIS (via shp2pgsql)
+// ✅ GeoPandas (Python)
+
+// Beispiel: QGIS Import
+// 1. ZIP-Datei speichern
+writeFileSync('export.zip', zipBlob);
+
+// 2. In QGIS: Layer → Add Layer → Add Vector Layer
+//    - Source: /path/to/export.zip
+//    - Alle Layer werden erkannt und können importiert werden
+```
+
 ### GML Versionen konvertieren
 ```typescript
 const parser = new GmlParser();
@@ -1151,6 +1427,7 @@ Die Bibliothek unterstützt verschiedene Output-Formate durch Builder-Klassen:
 | Builder | Format | Beschreibung | Verwendung |
 | ------- | ------ | ------------ | ---------- |
 | `GeoJsonBuilder` | GeoJSON | Standard-Format für Web-GIS | `new GmlParser()` oder `new GmlParser('geojson')` |
+| `ShapefileBuilder` | Shapefile | ESRI Shapefile (ZIP mit .shp/.shx/.dbf/.prj) | `new GmlParser('shapefile')` oder `new GmlParser('shp')` |
 | `CsvBuilder` | CSV + WKT | Tabelle mit WKT-Geometrien | `new GmlParser('csv')` |
 | `KmlBuilder` | KML | Google Earth / Maps | `new GmlParser('kml')` |
 | `WktBuilder` | WKT | Well-Known Text | `new GmlParser('wkt')` |
@@ -1229,6 +1506,71 @@ const json = wktCollectionToJson(collection, true);
 - Features: `WktFeature` ({ id, wkt, properties })
 - FeatureCollections: `WktCollection` ({ features: WktFeature[] })
 
+#### ShapefileBuilder
+
+Konvertiert GML zu ESRI Shapefile (ZIP-Archiv):
+
+```typescript
+import { ShapefileBuilder, GmlParser, toShapefile } from '@npm9912/s-gml';
+
+const parser = new GmlParser(new ShapefileBuilder());
+const featureCollection = await parser.parse(featureCollectionGml);
+
+// Export als ZIP
+const builder = new ShapefileBuilder();
+const zip = await builder.toZip(featureCollection, {
+  folder: 'layers',
+  filename: 'shapefile',
+  outputType: 'blob',
+  compression: 'DEFLATE',
+  truncateFieldNames: true
+});
+
+// Helper-Funktion
+const zip2 = await toShapefile(featureCollection, {
+  outputType: 'arraybuffer'
+});
+```
+
+**Features:**
+- ✅ Vollständiges ESRI Shapefile Format (.shp, .shx, .dbf, .prj)
+- ✅ ZIP-Archiv mit allen Komponenten
+- ✅ Ausgabe als Blob, ArrayBuffer oder Base64
+- ✅ Automatische Property-Namen Truncation (10 Zeichen Limit)
+- ✅ Custom Projektionen (WGS84, Web Mercator, Custom WKT)
+- ✅ Custom Layer-Namen nach Geometrie-Typ
+- ✅ Kompression (DEFLATE/STORE)
+- ✅ Alle Geometrie-Typen (Point, LineString, Polygon, Multi*)
+- ✅ Kompatibel mit QGIS, ArcGIS, GDAL, PostGIS, GeoPandas
+
+**Rückgabetypen:**
+- `toZip()`: `Promise<Blob | ArrayBuffer | string>` (abhängig von outputType)
+- Geometrien/Features: GeoJSON-Format (intern delegiert an GeoJsonBuilder)
+- FeatureCollections: GeoJSON FeatureCollection
+
+**Optionen (`ShapefileOptions`):**
+```typescript
+{
+  folder?: string;                    // ZIP-Ordner (Standard: 'layers')
+  filename?: string;                  // Dateiname (Standard: 'shapefile')
+  outputType?: 'blob' | 'base64' | 'arraybuffer';  // (Standard: 'blob')
+  compression?: 'STORE' | 'DEFLATE';  // (Standard: 'DEFLATE')
+  types?: {                           // Custom Layer-Namen
+    point?: string;
+    polygon?: string;
+    polyline?: string;
+  };
+  prj?: string;                       // Custom Projektion (WKT)
+  truncateFieldNames?: boolean;       // Property-Namen kürzen (Standard: true)
+}
+```
+
+**Static Methods:**
+- `ShapefileBuilder.getWgs84Prj()` - WGS84 Projektion (EPSG:4326)
+- `ShapefileBuilder.getWebMercatorPrj()` - Web Mercator (EPSG:3857)
+
+**Hinweis:** Shapefile-Format hat eine 10-Zeichen-Limitation für Property-Feldnamen. Mit `truncateFieldNames: true` (Standard) werden längere Namen automatisch gekürzt. Beim Deaktivieren dieser Option müssen alle Property-Namen ≤ 10 Zeichen sein.
+
 #### Helper: `getBuilder(format: string)`
 
 Gibt den passenden Builder für ein Format zurück:
@@ -1240,7 +1582,7 @@ const builder = getBuilder('csv');  // Gibt CsvBuilder zurück
 const parser = new GmlParser(builder);
 
 // Unterstützte Formate:
-// 'geojson', 'csv', 'kml', 'wkt', 'cis-json', 'coveragejson'
+// 'geojson', 'shapefile', 'shp', 'csv', 'kml', 'wkt', 'cis-json', 'coveragejson'
 ```
 
 ### Custom Builder erstellen
