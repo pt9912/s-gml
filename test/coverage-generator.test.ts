@@ -112,7 +112,7 @@ describe('Coverage Generator', () => {
 
             // Check for indentation (multiple spaces at line start)
             const lines = xml.split('\n');
-            const indentedLines = lines.filter(line => line.match(/^    /));
+            const indentedLines = lines.filter(line => line.match(/^ {4}/));
             expect(indentedLines.length).toBeGreaterThan(5);
         });
     });
