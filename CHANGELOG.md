@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2025-10-16
+
+### Added
+- **Shapefile Builder with ZIP Export**
+  - New `ShapefileBuilder` class that delegates to GeoJsonBuilder
+  - `toZip()` method using @mapbox/shp-write for ESRI Shapefile generation
+  - Support for both Node.js Buffer and browser Blob outputs
+  - ZIP archive contains .shp, .shx, .dbf, and .prj files
+  - TypeScript type definitions for @mapbox/shp-write
+  - 8 comprehensive tests for Shapefile generation
+
+- **CLI Multi-Format Support**
+  - `--format` option for parse command supporting 7 output formats
+  - Formats: geojson, shapefile, csv, kml, wkt, cis-json, coveragejson
+  - Format-specific output handling (JSON, text, binary)
+  - Proper CSV escaping for special characters
+  - Binary Shapefile ZIP output (requires --output file)
+
+- **Builder Integration Tests**
+  - 18 new comprehensive integration tests
+  - Tests for all builders via getBuilder() function
+  - Tests for format aliases (shp, json-coverage, covjson)
+  - Tests for Shapefile ZIP conversion
+  - Tests for mixed geometry types in FeatureCollections
+  - Total test count: 414 tests (up from 396)
+
+- **Version Bump Automation**
+  - `scripts/bump-version.js` for automated version updates
+  - Updates package.json, Dockerfile, src/cli.ts, CHANGELOG.md
+  - Validates semantic version format (x.y.z)
+  - Creates new CHANGELOG section with comparison links
+  - npm script: `npm run version:bump <version>`
+
+- **Docker OCI Labels**
+  - Added org.opencontainers.image.description label
+  - Standard OCI labels: title, version, authors, url, source, documentation, licenses
+  - Improved metadata display on GitHub Container Registry
+
+### Changed
+- **README.md**
+  - Added comprehensive Shapefile builder documentation
+  - Added CLI --format option examples for all 7 formats
+  - Added binary Shapefile ZIP output examples (Node.js & browser)
+  - Updated feature matrix to include Shapefile support
+  - Added CLI usage examples with all output formats
+
+### Fixed
+- **Parser Builder Architecture**
+  - Parser now correctly uses `builder.buildFeatureCollection()` and `builder.buildFeature()`
+  - Removed redundant `toGeoJsonFeature()` method
+  - All output formats now work correctly through Builder interface
+  - GeoJsonBuilder now properly handles bbox in FeatureCollections
+
+- **Code Quality**
+  - Fixed ESLint warning: replaced `while(true)` with `for(;;)` in streaming parser
+  - Removed unused Geometry import from type definitions
+
 ## [1.5.0] - 2025-10-16
 
 ### Added
@@ -281,6 +338,7 @@ const parser = new GmlParser(new MyBuilder());
 - CLI tool for GML operations
 - GeoJSON conversion
 
+[1.6.0]: https://github.com/pt9912/s-gml/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/pt9912/s-gml/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/pt9912/s-gml/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/pt9912/s-gml/compare/v1.2.0...v1.3.0
