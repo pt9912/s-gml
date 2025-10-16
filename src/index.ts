@@ -16,6 +16,8 @@ export { validateGml } from './validator.browser.js';
 export {
     getBuilder,
     GeoJsonBuilder,
+    ShapefileBuilder,
+    toShapefile,
     CisJsonBuilder,
     CoverageJsonBuilder,
     CsvBuilder,
@@ -23,6 +25,7 @@ export {
     WktBuilder,
     wktCollectionToJson,
     wktCollectionToCsv,
+    type ShapefileOptions,
     type CsvRow,
     type CsvOutput,
     type WktFeature,
