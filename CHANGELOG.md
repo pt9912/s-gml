@@ -5,6 +5,82 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-10-16
+
+### Added
+- **WCS Coverage Support**
+  - `RectifiedGridCoverage` parsing with georeferenced grid and affine transformation
+  - `GridCoverage` parsing with non-georeferenced grid
+  - `ReferenceableGridCoverage` parsing with irregular georeferencing
+  - `MultiPointCoverage` parsing with arbitrarily distributed points
+  - 3 comprehensive tests for Coverage types
+
+- **JSON Coverage Output Formats**
+  - **CIS JSON Builder** (OGC 09-146r8) - Coverage Implementation Schema JSON format
+  - **CoverageJSON Builder** (OGC 21-069r2) - Web-optimized coverage format
+  - Support for format aliases: `'cis-json'`, `'json-coverage'`, `'coveragejson'`, `'covjson'`
+  - 15 comprehensive tests for JSON builders
+
+- **GeoTIFF Metadata Utilities**
+  - `extractGeoTiffMetadata()` - Extract GeoTIFF-compatible metadata from Grid coverages
+  - `pixelToWorld()` - Transform pixel coordinates to world coordinates
+  - `worldToPixel()` - Transform world coordinates to pixel coordinates
+  - Affine transformation matrix calculation
+  - Pixel resolution and rotation extraction
+  - 3 tests for GeoTIFF utilities
+
+### Changed
+- **README.md**
+  - Removed deprecated "Neue GML-Elemente" feature row
+  - Added Coverage-Unterstützung feature with all 4 coverage types
+  - Added JSON-Coverage-Formate feature (CIS JSON + CoverageJSON)
+  - Updated main description to mention WFS-/WCS-Unterstützung
+  - Added comprehensive Coverage parsing examples
+  - Added GeoTIFF metadata extraction examples
+  - Added JSON coverage format examples (3 formats)
+  - Added MultiPointCoverage to supported elements table
+  - Total test count: 233 tests (up from 212)
+
+- **Builders** (`src/builders/`)
+  - Extended `GeoJsonBuilder` with 4 coverage build methods
+  - New `CisJsonBuilder` for OGC CIS JSON output
+  - New `CoverageJsonBuilder` for OGC CoverageJSON output
+  - `getBuilder()` now supports coverage format aliases
+
+- **Parser** (`src/parser.ts`)
+  - Added coverage type detection and parsing
+  - New methods: `parseRectifiedGridCoverage()`, `parseGridCoverage()`, `parseReferenceableGridCoverage()`, `parseMultiPointCoverage()`
+  - Extended type guards for coverage types
+
+- **Type System** (`src/types.ts`)
+  - New interfaces: `GmlRectifiedGridCoverage`, `GmlGridCoverage`, `GmlReferenceableGridCoverage`, `GmlMultiPointCoverage`
+  - New types: `GmlGridEnvelope`, `GmlRectifiedGrid`, `GmlGrid`, `GmlRangeSet`, `GmlRangeType`
+  - Extended `Builder` interface with coverage methods
+  - New union type: `GmlCoverage`
+
+### Examples
+```typescript
+// Parse GML Coverage to GeoJSON
+const parser = new GmlParser();
+const coverage = await parser.parse(coverageGml);
+// { type: 'Feature', properties: { coverageType: 'RectifiedGridCoverage', grid: {...} } }
+
+// Parse to CIS JSON
+const cisParser = new GmlParser('cis-json');
+const cisJson = await cisParser.parse(coverageGml);
+// { "@context": "http://www.opengis.net/cis/1.1/json", ... }
+
+// Parse to CoverageJSON
+const covjsonParser = new GmlParser('coveragejson');
+const covJson = await covjsonParser.parse(coverageGml);
+// { "type": "Coverage", "domain": {...}, "parameters": {...}, "ranges": {...} }
+
+// Extract GeoTIFF metadata
+import { extractGeoTiffMetadata, pixelToWorld } from '@npm9912/s-gml';
+const metadata = extractGeoTiffMetadata(coverageObject);
+const worldCoords = pixelToWorld(50, 100, metadata);
+```
+
 ## [1.3.0] - 2025-10-06
 
 ### Added
