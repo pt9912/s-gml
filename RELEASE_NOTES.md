@@ -384,8 +384,7 @@ This release was developed with assistance from Claude Code to ensure comprehens
 Future improvements may include:
 - Additional output formats (GeoPackage, FlatGeobuf)
 - Further performance optimizations for very large datasets
-- GML validation improvements
-- Enhanced time-series Coverage support
+- Enhanced GML validation with more detailed error reporting
 
 ---
 
