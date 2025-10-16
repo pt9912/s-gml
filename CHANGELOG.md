@@ -5,6 +5,64 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-10-16
+
+### Added
+- **WCS 2.0 XML Coverage Generator**
+  - `CoverageGenerator` class for generating WCS 2.0 compliant XML
+  - Support for all 4 coverage types (RectifiedGrid, Grid, ReferenceableGrid, MultiPoint)
+  - Multi-band RangeType generation with SWE DataRecord
+  - Pretty-print XML formatting option
+  - XML escaping for safe output
+  - Helper function `generateCoverageXml()`
+  - 10 comprehensive tests for Coverage Generator
+
+- **Multi-band RangeType Tests**
+  - RGB Coverage test (3 bands)
+  - Landsat-8 hyperspectral test (7 bands)
+  - Weather station multi-parameter test (4 parameters)
+  - GeoTIFF metadata extraction from multi-band coverage
+  - 4 comprehensive tests validating existing multi-band support
+
+### Changed
+- **README.md**
+  - Added "Coverage zu WCS 2.0 XML generieren" section with examples
+  - Added CoverageGenerator to features table
+  - Added CoverageGenerator API documentation
+  - Included multi-band RangeType example
+  - Added round-trip conversion example
+  - Total test count: 247 tests (up from 233)
+
+- **Exports** (`src/index.ts`)
+  - Exported `CoverageGenerator` class
+  - Exported `generateCoverageXml` helper function
+
+### Examples
+```typescript
+// Generate WCS 2.0 XML from Coverage object
+import { CoverageGenerator } from '@npm9912/s-gml';
+
+const generator = new CoverageGenerator();
+const xml = generator.generate(coverage);
+
+// With pretty-print
+const xmlPretty = generator.generate(coverage, true);
+
+// Multi-band RangeType
+const rgbCoverage = {
+  type: 'RectifiedGridCoverage',
+  domainSet: { /* grid definition */ },
+  rangeType: {
+    field: [
+      { name: 'red', dataType: 'uint8', uom: 'W.m-2.sr-1' },
+      { name: 'green', dataType: 'uint8', uom: 'W.m-2.sr-1' },
+      { name: 'blue', dataType: 'uint8', uom: 'W.m-2.sr-1' }
+    ]
+  },
+  // ...
+};
+```
+
 ## [1.4.0] - 2025-10-16
 
 ### Added
@@ -223,6 +281,8 @@ const parser = new GmlParser(new MyBuilder());
 - CLI tool for GML operations
 - GeoJSON conversion
 
+[1.5.0]: https://github.com/pt9912/s-gml/compare/v1.4.0...v1.5.0
+[1.4.0]: https://github.com/pt9912/s-gml/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/pt9912/s-gml/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/pt9912/s-gml/compare/v1.1.4...v1.2.0
 [1.1.4]: https://github.com/pt9912/s-gml/compare/v1.1.3...v1.1.4
