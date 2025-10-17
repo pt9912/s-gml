@@ -35,4 +35,4 @@ Thumbs.db
 # Local development directories
 .claude/settings.local.json
 .claude/settings.global.json
-.wfs/
+.wfs/docs/api/
