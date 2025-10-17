@@ -33,5 +33,6 @@ Thumbs.db
 .npm
 
 # Local development directories
-.claude/
+.claude/settings.local.json
+.claude/settings.global.json
 .wfs/
