@@ -9,6 +9,18 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash(git push*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/post-push-actions-check.sh",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   }
 }

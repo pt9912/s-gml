@@ -158,3 +158,82 @@ git push --no-verify
 ```
 
 **Achtung:** Dies sollte nur in Ausnahmefällen verwendet werden!
+
+---
+
+## post-push-actions-check.sh
+
+Automatische GitHub Actions Überwachung nach `git push`.
+
+### Was es macht
+
+Dieses Skript wird automatisch über einen **PostToolUse Hook** nach jedem `git push` ausgeführt:
+
+- Erkennt `git push` Befehle
+- Erinnert Claude daran, GitHub Actions zu überwachen
+- Aktiviert automatisch den **GitHub Actions Monitor Skill**
+- Stellt sicher, dass CI/CD-Pipeline erfolgreich läuft
+
+### Funktionsweise
+
+Das Skript ist in `.claude/settings.json` als PostToolUse Hook konfiguriert:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash(git push*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/post-push-actions-check.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Integration mit Skills
+
+Das Skript arbeitet zusammen mit dem **GitHub Actions Monitor Skill**:
+
+1. **PostToolUse Hook** erkennt `git push`
+2. Hook sendet Erinnerung an Claude
+3. **GitHub Actions Monitor Skill** wird automatisch aktiviert
+4. Skill führt `gh run watch` aus
+5. Nutzer wird über Actions-Status informiert
+
+### Beispiel-Ablauf
+
+Nach einem `git push`:
+
+```
+Running pre-push checks...
+✅ All pre-push checks passed!
+
+To https://github.com/pt9912/s-gml.git
+   abc123..def456  develop -> develop
+
+⚠️ WICHTIG: Ein 'git push' wurde gerade ausgeführt.
+🔍 Überwache GitHub Actions...
+
+→ Running workflow...
+✅ All GitHub Actions passed!
+```
+
+### Manuelle Verwendung
+
+Das Skript kann auch manuell aufgerufen werden (für Testing):
+
+```bash
+echo '{"command":"git push"}' | bash scripts/post-push-actions-check.sh
+```
+
+### Konfiguration
+
+Der Hook ist standardmäßig aktiviert für alle Teammitglieder über `.claude/settings.json`.
+
+Um den Hook zu deaktivieren, kann er in der lokalen `.claude/settings.local.json` überschrieben werden.
