@@ -99,3 +99,62 @@ Ungültige Formate werden abgelehnt:
    5. Tag erstellen: git tag v1.6.0
    6. Pushen: git push && git push --tags
 ```
+
+---
+
+## setup-hooks.sh
+
+Installiert Git Hooks für das Projekt.
+
+### Was es macht
+
+Installiert einen **pre-push Hook**, der automatisch vor jedem `git push` ausgeführt wird:
+
+- Führt `pnpm lint` aus
+- Blockiert den Push, wenn Linting-Fehler gefunden werden
+- Stellt sicher, dass nur Code mit korrekter Code-Qualität gepusht wird
+
+### Verwendung
+
+```bash
+# Via npm script (empfohlen)
+npm run setup-hooks
+
+# Oder direkt
+bash scripts/setup-hooks.sh
+```
+
+### Pre-Push Hook
+
+Der Hook läuft automatisch bei jedem `git push`:
+
+```
+Running pre-push checks...
+
+→ Running pnpm lint...
+
+✅ All pre-push checks passed!
+```
+
+Falls Linting-Fehler gefunden werden:
+
+```
+Running pre-push checks...
+
+→ Running pnpm lint...
+/path/to/file.ts
+  72:17  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+❌ Lint failed! Please fix the linting errors before pushing.
+   Run 'pnpm run lint' to see the errors.
+```
+
+### Hook umgehen (nicht empfohlen)
+
+In Notfällen kann der Hook mit `--no-verify` umgangen werden:
+
+```bash
+git push --no-verify
+```
+
+**Achtung:** Dies sollte nur in Ausnahmefällen verwendet werden!
