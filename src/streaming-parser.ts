@@ -1,53 +1,84 @@
+import { GmlParser } from './parser.js';
+import { Builder, Feature } from './types.js';
+
 /**
- * Streaming GML Parser
+ * Optionen für den StreamingGmlParser.
  *
- * Parses large GML files in a streaming fashion without loading
- * the entire file into memory. Ideal for processing large WFS responses
- * or multi-GB GML datasets.
+ * @public
+ * @category Parser
+ */
+export interface StreamingParserOptions {
+    /**
+     * Output-Format Builder (Standard: GeoJSON)
+     */
+    builder?: Builder;
+
+    /**
+     * Batch-Größe für die Feature-Verarbeitung.
+     * Höhere Werte = mehr Speicher aber bessere Performance
+     * @defaultValue 100
+     */
+    batchSize?: number;
+
+    /**
+     * Maximale Buffer-Größe in Bytes bevor ein Flush erzwungen wird.
+     * @defaultValue 10485760 (10MB)
+     */
+    maxBufferSize?: number;
+}
+
+/**
+ * Callback-Funktion für geparste Features.
+ * @param feature - Geparste Feature
+ * @public
+ */
+export type FeatureCallback = (feature: Feature) => void | Promise<void>;
+
+/**
+ * Callback-Funktion für Fehler.
+ * @param error - Aufgetretener Fehler
+ * @public
+ */
+export type ErrorCallback = (error: Error) => void;
+
+/**
+ * Callback-Funktion für das Ende des Parsings.
+ * @public
+ */
+export type EndCallback = () => void;
+
+/**
+ * Event-basierter Streaming-Parser für große GML-Dokumente.
  *
- * Usage:
+ * Ideal für Multi-GB Dateien und WFS-Responses mit Tausenden von Features.
+ * Verarbeitet Features in Batches um konstanten Speicherverbrauch zu gewährleisten.
+ *
+ * @example
  * ```typescript
- * const parser = new StreamingGmlParser();
+ * const parser = new StreamingGmlParser({
+ *   batchSize: 100,
+ *   maxBufferSize: 10485760 // 10MB
+ * });
  *
  * parser.on('feature', (feature) => {
- *   console.log('Parsed feature:', feature);
+ *   console.log('Feature parsed:', feature.id);
+ *   // Verarbeite Feature (z.B. DB-Insert)
+ * });
+ *
+ * parser.on('error', (error) => {
+ *   console.error('Parse error:', error);
  * });
  *
  * parser.on('end', () => {
  *   console.log('Parsing complete');
  * });
  *
- * await parser.parseStream(readableStream);
+ * await parser.parseFromUrl('https://example.com/large-wfs-response.xml');
  * ```
+ *
+ * @public
+ * @category Parser
  */
-
-import { GmlParser } from './parser.js';
-import { Builder, Feature } from './types.js';
-
-export interface StreamingParserOptions {
-    /**
-     * Output format builder
-     */
-    builder?: Builder;
-
-    /**
-     * Batch size for processing features
-     * Higher values = more memory but better performance
-     * Default: 100
-     */
-    batchSize?: number;
-
-    /**
-     * Maximum buffer size in bytes before forcing a flush
-     * Default: 10MB
-     */
-    maxBufferSize?: number;
-}
-
-export type FeatureCallback = (feature: Feature) => void | Promise<void>;
-export type ErrorCallback = (error: Error) => void;
-export type EndCallback = () => void;
-
 export class StreamingGmlParser {
     private gmlParser: GmlParser;
     private batchSize: number;
@@ -61,6 +92,13 @@ export class StreamingGmlParser {
     private featureBatch: Feature[] = [];
     private featureCount: number = 0;
 
+    /**
+     * Erstellt eine neue StreamingGmlParser-Instanz.
+     *
+     * @param options - Parser-Optionen
+     *
+     * @public
+     */
     constructor(options: StreamingParserOptions = {}) {
         this.gmlParser = new GmlParser(options.builder || 'geojson');
         this.batchSize = options.batchSize || 100;
@@ -68,7 +106,13 @@ export class StreamingGmlParser {
     }
 
     /**
-     * Register a callback for each parsed feature
+     * Registriert einen Event-Handler.
+     *
+     * @param event - Event-Name ('feature', 'error', 'end')
+     * @param callback - Callback-Funktion
+     * @returns Diese Instanz für Method Chaining
+     *
+     * @public
      */
     on(event: 'feature', callback: FeatureCallback): this;
     on(event: 'error', callback: ErrorCallback): this;
@@ -89,7 +133,18 @@ export class StreamingGmlParser {
     }
 
     /**
-     * Parse a ReadableStream (Node.js or Browser)
+     * Parsed GML von einem ReadableStream.
+     *
+     * Unterstützt sowohl Node.js Streams als auch Browser Web Streams.
+     *
+     * @param stream - ReadableStream mit GML-Daten
+     * @returns Promise das beim Abschluss des Parsings aufgelöst wird
+     *
+     * @fires feature - Wird für jedes geparste Feature emitted
+     * @fires error - Wird bei Parsing-Fehlern emitted
+     * @fires end - Wird nach Abschluss des Parsings emitted
+     *
+     * @public
      */
     async parseStream(stream: ReadableStream<Uint8Array> | NodeJS.ReadableStream): Promise<void> {
         try {
@@ -112,7 +167,25 @@ export class StreamingGmlParser {
     }
 
     /**
-     * Parse from a file path (Node.js only)
+     * Parsed GML von einer Datei.
+     *
+     * Nur für Node.js verfügbar. Im Browser nutze parseStream() mit einem File-Reader.
+     *
+     * @param filePath - Pfad zur GML-Datei
+     * @returns Promise das beim Abschluss des Parsings aufgelöst wird
+     *
+     * @fires feature - Wird für jedes geparste Feature emitted
+     * @fires error - Wird bei Parsing-Fehlern emitted
+     * @fires end - Wird nach Abschluss des Parsings emitted
+     *
+     * @example
+     * ```typescript
+     * const parser = new StreamingGmlParser();
+     * parser.on('feature', (feature) => console.log(feature));
+     * await parser.parseFile('/path/to/large-file.gml');
+     * ```
+     *
+     * @public
      */
     async parseFile(filePath: string): Promise<void> {
         const fs = await import('fs');
@@ -121,7 +194,28 @@ export class StreamingGmlParser {
     }
 
     /**
-     * Parse from a URL
+     * Parsed GML von einer URL mit Streaming.
+     *
+     * Lädt die Daten per fetch() und verarbeitet sie als Stream.
+     * Ideal für große WFS GetFeature Responses.
+     *
+     * @param url - URL zum GML-Dokument
+     * @returns Promise das beim Abschluss des Parsings aufgelöst wird
+     *
+     * @throws {Error} - Bei HTTP-Fehlern (404, 500, etc.)
+     *
+     * @fires feature - Wird für jedes geparste Feature emitted
+     * @fires error - Wird bei Parsing-Fehlern emitted
+     * @fires end - Wird nach Abschluss des Parsings emitted
+     *
+     * @example
+     * ```typescript
+     * const parser = new StreamingGmlParser();
+     * parser.on('feature', (feature) => console.log(feature));
+     * await parser.parseFromUrl('https://example.com/wfs?service=WFS&request=GetFeature');
+     * ```
+     *
+     * @public
      */
     async parseFromUrl(url: string): Promise<void> {
         const response = await fetch(url);
@@ -310,7 +404,11 @@ export class StreamingGmlParser {
     }
 
     /**
-     * Get the total number of features parsed
+     * Gibt die Anzahl der bisher geparsten Features zurück.
+     *
+     * @returns Anzahl der geparsten Features
+     *
+     * @public
      */
     getFeatureCount(): number {
         return this.featureCount;
@@ -318,7 +416,37 @@ export class StreamingGmlParser {
 }
 
 /**
- * Convenience function to parse a large GML stream
+ * Convenience-Funktion zum Parsen eines großen GML-Streams.
+ *
+ * Vereinfacht das Streaming-Parsing mit einer einzigen Funktionsaufruf.
+ * Akzeptiert Streams, Dateipfade oder URLs.
+ *
+ * @param stream - ReadableStream, Dateipfad oder URL zum GML-Dokument
+ * @param onFeature - Callback für jedes geparste Feature
+ * @param options - Optional: Parser-Optionen
+ * @returns Promise mit der Anzahl geparster Features
+ *
+ * @example
+ * ```typescript
+ * // Von URL parsen
+ * const count = await parseGmlStream(
+ *   'https://example.com/large-dataset.gml',
+ *   (feature) => {
+ *     console.log(feature);
+ *   },
+ *   { batchSize: 50 }
+ * );
+ * console.log(`Parsed ${count} features`);
+ *
+ * // Von Datei parsen
+ * const count2 = await parseGmlStream(
+ *   '/path/to/file.gml',
+ *   (feature) => database.insert(feature)
+ * );
+ * ```
+ *
+ * @public
+ * @category Parser
  */
 export async function parseGmlStream(
     stream: ReadableStream<Uint8Array> | NodeJS.ReadableStream | string,
