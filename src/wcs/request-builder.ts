@@ -1,14 +1,15 @@
 /**
- * WCS GetCoverage Request Builder
- *
- * Generates WCS GetCoverage request URLs and XML POST bodies
- * following OGC WCS 2.0.1 specification
- *
- * Reference: OGC WCS 2.0 Interface Standard - Core (09-110r4)
+ * WCS Version Type.
+ * @public
+ * @category WCS
  */
-
 export type WcsVersion = '2.0.1' | '2.0.0' | '1.1.0' | '1.0.0';
 
+/**
+ * WCS Subset-Definition für räumliches/zeitliches Subsetting.
+ * @public
+ * @category WCS
+ */
 export interface WcsSubset {
     axis: string;      // e.g., 'Lat', 'Long', 'time', 'elevation'
     min?: string | number;
@@ -16,11 +17,21 @@ export interface WcsSubset {
     value?: string | number; // For single point
 }
 
+/**
+ * WCS Scaling-Optionen für Skalierung von Coverages.
+ * @public
+ * @category WCS
+ */
 export interface WcsScaling {
     type: 'size' | 'extent' | 'factor';
     value: number | number[];
 }
 
+/**
+ * Optionen für WCS GetCoverage Anfragen.
+ * @public
+ * @category WCS
+ */
 export interface WcsGetCoverageOptions {
     // Required parameters
     coverageId: string;
@@ -48,17 +59,54 @@ export interface WcsGetCoverageOptions {
     mediaType?: Record<string, string>;
 }
 
+/**
+ * WCS Request Builder für GetCoverage-Anfragen.
+ *
+ * Generiert WCS GetCoverage URLs (GET) und XML (POST) für verschiedene WCS-Versionen.
+ * Unterstützt Subsetting, Scaling, Range Subsetting und CRS-Transformation.
+ *
+ * @example
+ * ```typescript
+ * const builder = new WcsRequestBuilder('https://example.com/wcs', '2.0.1');
+ *
+ * // GET Request URL
+ * const url = builder.buildGetCoverageUrl({
+ *   coverageId: 'LANDSAT8',
+ *   format: 'image/tiff',
+ *   subset: [
+ *     { axis: 'Lat', min: -34, max: -33 },
+ *     { axis: 'Long', min: 18, max: 19 }
+ *   ],
+ *   rangeSubset: ['B4', 'B3', 'B2'],
+ *   scaling: { type: 'size', value: [1024, 1024] }
+ * });
+ * ```
+ *
+ * @public
+ * @category WCS
+ */
 export class WcsRequestBuilder {
     private baseUrl: string;
     private version: WcsVersion;
 
+    /**
+     * Erstellt einen neuen WcsRequestBuilder.
+     *
+     * @param baseUrl - WCS Server Base-URL
+     * @param version - WCS Version (Standard: '2.0.1')
+     * @public
+     */
     constructor(baseUrl: string, version: WcsVersion = '2.0.1') {
         this.baseUrl = baseUrl.endsWith('?') ? baseUrl : `${baseUrl}?`;
         this.version = version;
     }
 
     /**
-     * Build GetCoverage request URL (GET method)
+     * Baut eine GetCoverage GET Request URL.
+     *
+     * @param options - GetCoverage Optionen
+     * @returns WCS GetCoverage URL mit Query-Parametern
+     * @public
      */
     buildGetCoverageUrl(options: WcsGetCoverageOptions): string {
         const params = new URLSearchParams();
@@ -131,7 +179,12 @@ export class WcsRequestBuilder {
     }
 
     /**
-     * Build GetCoverage request XML (POST method) for WCS 2.0
+     * Baut eine GetCoverage POST Request XML (nur WCS 2.0).
+     *
+     * @param options - GetCoverage Optionen
+     * @returns WCS GetCoverage XML für POST Request
+     * @throws {Error} - Bei nicht unterstützten Versionen (< 2.0)
+     * @public
      */
     buildGetCoverageXml(options: WcsGetCoverageOptions): string {
         if (!this.version.startsWith('2.0')) {
@@ -286,7 +339,15 @@ export class WcsRequestBuilder {
 }
 
 /**
- * Helper function to create WCS GetCoverage request URL
+ * Helper-Funktion zum Erstellen einer WCS GetCoverage Request URL.
+ *
+ * @param baseUrl - WCS Server Base-URL
+ * @param options - GetCoverage Optionen
+ * @param version - WCS Version (Standard: '2.0.1')
+ * @returns WCS GetCoverage URL
+ *
+ * @public
+ * @category WCS
  */
 export function buildWcsGetCoverageUrl(
     baseUrl: string,
@@ -298,7 +359,14 @@ export function buildWcsGetCoverageUrl(
 }
 
 /**
- * Helper function to create WCS GetCoverage request XML
+ * Helper-Funktion zum Erstellen einer WCS GetCoverage Request XML.
+ *
+ * @param options - GetCoverage Optionen
+ * @param version - WCS Version (Standard: '2.0.1')
+ * @returns WCS GetCoverage XML
+ *
+ * @public
+ * @category WCS
  */
 export function buildWcsGetCoverageXml(
     options: WcsGetCoverageOptions,
