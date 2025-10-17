@@ -105,35 +105,50 @@ docker pull ghcr.io/pt9912/s-gml:<VERSION>
 [Falls vorhanden]
 ```
 
-### 5. Lint prüfen
+### 5. Dokumentation prüfen
+
+- **WICHTIG:** Dokumentation muss aktuell sein vor dem Release
+- Führe aus: `pnpm run docs:generate`
+- Falls TypeDoc Errors auftreten:
+  - Zeige die Fehler an
+  - Informiere den Nutzer über fehlende oder fehlerhafte TSDoc-Kommentare
+  - Stoppe den Release-Prozess
+- Prüfe, dass wichtige Dateien existieren und aktuell sind:
+  - `docs/README.md`
+  - `docs/architecture/system-overview.md`
+  - `docs/architecture/class-diagram.md`
+  - `docs/guides/CONTRIBUTING.md`
+- Informiere, falls wichtige Dokumentation fehlt
+
+### 6. Lint prüfen
 
 - **WICHTIG:** Lint muss VOR den Tests ausgeführt werden
 - Führe aus: `pnpm run lint`
 - Falls Fehler auftreten, stoppe den Release-Prozess und informiere den Nutzer
 
-### 6. Tests ausführen
+### 7. Tests ausführen
 
 - Führe aus: `pnpm test`
 - Falls Fehler auftreten, stoppe den Release-Prozess und informiere den Nutzer
 
-### 7. Build erstellen
+### 8. Build erstellen
 
 - Führe aus: `pnpm run build`
 - Falls Fehler auftreten, stoppe den Release-Prozess und informiere den Nutzer
 
-### 8. Git Commit und Tag erstellen
+### 9. Git Commit und Tag erstellen
 
 - Führe aus: `git add .`
 - Commit-Message: `chore: release v<VERSION>`
 - Tag erstellen: `git tag v<VERSION>`
 - Füge die übliche Co-Authored-By Signatur hinzu
 
-### 9. Push zu GitHub
+### 10. Push zu GitHub
 
 - Führe aus: `git push`
 - Führe aus: `git push --tags`
 
-### 10. GitHub Actions beobachten (develop)
+### 11. GitHub Actions beobachten (develop)
 
 - **WICHTIG:** Warte auf den Abschluss der GitHub Actions
 - Führe aus: `gh run watch` um den Status zu überwachen
@@ -147,7 +162,7 @@ docker pull ghcr.io/pt9912/s-gml:<VERSION>
   - Informiere den Nutzer über den Erfolg
   - Fahre mit dem Merge in main fort
 
-### 11. Develop in Main mergen
+### 12. Develop in Main mergen
 
 - **WICHTIG:** Der Release muss auch im main Branch verfügbar sein
 - Wechsle zum main Branch: `git checkout main`
@@ -166,13 +181,13 @@ docker pull ghcr.io/pt9912/s-gml:<VERSION>
   - Informiere den Nutzer über das Problem
 - Wechsle zurück zum develop Branch: `git checkout develop`
 
-### 12. GitHub Release erstellen
+### 13. GitHub Release erstellen
 
 - Führe aus: `gh release create v<VERSION> --notes-file RELEASE_NOTES.md`
 - Bestätige, dass das Release erfolgreich erstellt wurde
 - Zeige die Release-URL an
 
-### 13. Zurück zu develop und synchronisieren
+### 14. Zurück zu develop und synchronisieren
 
 - **WICHTIG:** Develop und Main müssen synchron bleiben
 - Wechsle zum develop Branch: `git checkout develop`
@@ -185,7 +200,7 @@ docker pull ghcr.io/pt9912/s-gml:<VERSION>
 - Push zu develop: `git push origin develop`
 - Bestätige, dass develop und main jetzt synchron sind
 
-### 14. Abschluss
+### 15. Abschluss
 
 - Zeige eine Zusammenfassung aller durchgeführten Schritte
 - Informiere über nächste Schritte (npm Publish erfolgt automatisch via GitHub Actions)
