@@ -35,4 +35,9 @@ Thumbs.db
 # Local development directories
 .claude/settings.local.json
 .claude/settings.global.json
-.wfs/docs/api/
+
+# Test data (large WFS XML files)
+.wfs/
+
+# Generated documentation
+docs/api/
