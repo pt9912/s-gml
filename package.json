@@ -1,6 +1,6 @@
 {
     "name": "@npm9912/s-gml",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "description": "TypeScript library for parsing, converting, and validating GML 2.1.2/3.0/3.2",
     "type": "module",
     "main": "./dist/index.js",
@@ -50,8 +50,11 @@
     },
     "dependencies": {
         "@mapbox/shp-write": "^0.4.3",
+        "@ngageoint/geopackage": "^4.2.6",
+        "@ngageoint/geopackage-geojson-js": "^4.1.3",
         "commander": "^11.0.0",
         "fast-xml-parser": "^4.5.0",
+        "flatgeobuf": "^4.3.1",
         "xmllint-wasm": "^5.0.0"
     },
     "devDependencies": {

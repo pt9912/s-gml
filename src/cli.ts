@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import { GmlParser, OwsExceptionError, getBuilder, ShapefileBuilder } from './index.js';
+import { GmlParser, OwsExceptionError, getBuilder, ShapefileBuilder, GeoPackageBuilder, FlatGeobufBuilder } from './index.js';
 import { validateGml } from './validator.node.js';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { Command } from 'commander';
 
-type OutputFormat = 'geojson' | 'shapefile' | 'shp' | 'csv' | 'kml' | 'wkt' | 'cis-json' | 'coveragejson';
+type OutputFormat = 'geojson' | 'shapefile' | 'shp' | 'csv' | 'kml' | 'wkt' | 'cis-json' | 'coveragejson' | 'geopackage' | 'gpkg' | 'flatgeobuf' | 'fgb';
 
 /**
  * Checks if a string is a URL
@@ -48,6 +48,24 @@ async function writeOutput(result: any, format: OutputFormat, outputPath?: strin
 
         writeFileSync(outputPath, result);
         console.log(`Successfully wrote Shapefile ZIP to ${outputPath}`);
+    } else if (format === 'geopackage' || format === 'gpkg') {
+        // GeoPackage returns a Buffer, write as binary
+        if (!outputPath) {
+            console.error('Error: --output is required for GeoPackage format');
+            process.exit(1);
+        }
+
+        writeFileSync(outputPath, result);
+        console.log(`Successfully wrote GeoPackage to ${outputPath}`);
+    } else if (format === 'flatgeobuf' || format === 'fgb') {
+        // FlatGeobuf returns a Uint8Array, write as binary
+        if (!outputPath) {
+            console.error('Error: --output is required for FlatGeobuf format');
+            process.exit(1);
+        }
+
+        writeFileSync(outputPath, result);
+        console.log(`Successfully wrote FlatGeobuf to ${outputPath}`);
     } else if (format === 'geojson' || format === 'cis-json' || format === 'coveragejson') {
         // JSON formats
         const jsonOutput = JSON.stringify(result, null, 2);
@@ -109,18 +127,18 @@ export function buildProgram(): Command {
     program
         .name('s-gml')
         .description('CLI tool for parsing, converting, and validating GML files')
-        .version('1.6.0', '-V, --version')
+        .version('1.7.0', '-V, --version')
         .option('--verbose', 'Show detailed error messages with stack traces');
 
     program
         .command('parse <input>')
         .description('Parse GML to various formats (supports local files and URLs)')
         .option('--output <file>', 'Output file (default: stdout, required for Shapefile)')
-        .option('--format <format>', 'Output format: geojson, shapefile, csv, kml, wkt, cis-json, coveragejson (default: geojson)', 'geojson')
+        .option('--format <format>', 'Output format: geojson, shapefile, geopackage, flatgeobuf, csv, kml, wkt, cis-json, coveragejson (default: geojson)', 'geojson')
         .action(async (input, options, command) => {
             try {
                 const format = options.format as OutputFormat;
-                const validFormats = ['geojson', 'shapefile', 'shp', 'csv', 'kml', 'wkt', 'cis-json', 'coveragejson'];
+                const validFormats = ['geojson', 'shapefile', 'shp', 'geopackage', 'gpkg', 'flatgeobuf', 'fgb', 'csv', 'kml', 'wkt', 'cis-json', 'coveragejson'];
 
                 if (!validFormats.includes(format)) {
                     console.error(`Error: Invalid format '${format}'. Valid formats: ${validFormats.join(', ')}`);
@@ -148,6 +166,26 @@ export function buildProgram(): Command {
 
                     // Convert ArrayBuffer to Buffer for Node.js
                     result = Buffer.from(result);
+                } else if (format === 'geopackage' || format === 'gpkg') {
+                    // GeoPackageBuilder returns GeoJSON
+                    // We then use toGeoPackage() to convert the GeoJSON to GeoPackage binary
+                    const builder = new GeoPackageBuilder();
+                    const parser = new GmlParser(builder);
+                    const geojson = await parser.parse(gml);
+
+                    // Convert GeoJSON to GeoPackage
+                    result = await builder.toGeoPackage(geojson as any, {
+                        tableName: 'features'
+                    });
+                } else if (format === 'flatgeobuf' || format === 'fgb') {
+                    // FlatGeobufBuilder returns GeoJSON
+                    // We then use toFlatGeobuf() to convert the GeoJSON to FlatGeobuf binary
+                    const builder = new FlatGeobufBuilder();
+                    const parser = new GmlParser(builder);
+                    const geojson = await parser.parse(gml);
+
+                    // Convert GeoJSON to FlatGeobuf
+                    result = builder.toFlatGeobuf(geojson as any);
                 } else {
                     // Use appropriate builder - the parser now correctly uses builders for everything
                     const builder = getBuilder(format);

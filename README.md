@@ -14,7 +14,7 @@ inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-/WCS-Unterstützung und
 | Feature                    | Beschreibung                                          |
 | -------------------------- | ----------------------------------------------------- |
 | **GML → GeoJSON**          | Parsen aller GML-Elemente nach GeoJSON                |
-| **Zusätzliche Output-Formate** | Shapefile, CSV (WKT), KML (Google Earth), WKT (Well-Known Text) |
+| **Zusätzliche Output-Formate** | Shapefile, GeoPackage, FlatGeobuf, CSV (WKT), KML (Google Earth), WKT (Well-Known Text) |
 | **Coverage-Unterstützung** | RectifiedGridCoverage, GridCoverage, MultiPointCoverage + GeoTIFF-Metadaten |
 | **JSON-Coverage-Formate**  | CIS JSON + CoverageJSON (beide OGC-Standards)         |
 | **WCS 2.0 XML Generator**  | Coverage → WCS 2.0 XML mit Multi-band RangeType       |
@@ -1028,6 +1028,230 @@ writeFileSync('export.zip', zipBlob);
 //    - Alle Layer werden erkannt und können importiert werden
 ```
 
+### GML zu GeoPackage konvertieren (OGC GeoPackage)
+```typescript
+import { GmlParser, GeoPackageBuilder, toGeoPackage } from '@npm9912/s-gml';
+
+// GeoPackage Builder
+const parser = new GmlParser(new GeoPackageBuilder());
+
+// FeatureCollection zu GeoPackage
+const featureCollectionGml = `
+<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0"
+                        xmlns:gml="http://www.opengis.net/gml/3.2">
+  <wfs:member>
+    <Feature gml:id="F1">
+      <geometry>
+        <gml:Point><gml:pos>10 20</gml:pos></gml:Point>
+      </geometry>
+      <name>Location A</name>
+      <value>100</value>
+    </Feature>
+  </wfs:member>
+</wfs:FeatureCollection>`;
+
+const featureCollection = await parser.parse(featureCollectionGml);
+
+// Als GeoPackage exportieren
+const builder = new GeoPackageBuilder();
+const gpkgBuffer = await builder.toGeoPackage(featureCollection, {
+  tableName: 'features'  // Standard: 'features'
+});
+
+// GeoPackage-Datei speichern (Node.js)
+import { writeFileSync } from 'fs';
+writeFileSync('output.gpkg', gpkgBuffer);
+```
+
+**Integration mit GmlParser:**
+
+```typescript
+// Direkter Export von GML zu GeoPackage
+const gmlXml = `
+<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0"
+                        xmlns:gml="http://www.opengis.net/gml/3.2">
+  <wfs:member>
+    <TestFeature gml:id="F1">
+      <geometry>
+        <gml:Point><gml:pos>10 20</gml:pos></gml:Point>
+      </geometry>
+      <name>Test Location</name>
+    </TestFeature>
+  </wfs:member>
+</wfs:FeatureCollection>`;
+
+// Variante 1: Mit GeoPackageBuilder
+const parser = new GmlParser(new GeoPackageBuilder());
+const featureCollection = await parser.parse(gmlXml);
+const gpkg = await new GeoPackageBuilder().toGeoPackage(featureCollection);
+
+// Variante 2: Mit getBuilder
+import { getBuilder } from '@npm9912/s-gml';
+const gpkgParser = new GmlParser(getBuilder('geopackage'));
+const fc = await gpkgParser.parse(gmlXml);
+```
+
+**Helper-Funktion:**
+
+```typescript
+import { toGeoPackage } from '@npm9912/s-gml';
+
+// Schneller Export ohne Builder-Instanz
+const gpkg = await toGeoPackage(featureCollection);
+
+// Mit Optionen
+const customGpkg = await toGeoPackage(featureCollection, {
+  tableName: 'my_features'
+});
+```
+
+**Unterstützte Geometrie-Typen:**
+
+```typescript
+// Alle GeoJSON-Geometrien werden unterstützt
+const mixedFeatures = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [10, 20] },
+      properties: { type: 'Point' }
+    },
+    {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]
+      },
+      properties: { type: 'Polygon' }
+    }
+  ]
+};
+
+// GeoPackage erstellen
+const gpkg = await builder.toGeoPackage(mixedFeatures);
+```
+
+**Kompatibilität mit GIS-Software:**
+
+```typescript
+// ✅ QGIS
+// ✅ ArcGIS / ArcGIS Pro
+// ✅ GDAL/OGR
+// ✅ GeoPandas (Python)
+// ✅ PostGIS
+// ✅ FME
+// ✅ MapInfo Pro
+// ✅ Global Mapper
+
+// Beispiel: QGIS Import
+// 1. GeoPackage-Datei speichern
+writeFileSync('export.gpkg', gpkgBuffer);
+
+// 2. In QGIS: Layer → Add Layer → Add Vector Layer
+//    - Source: /path/to/export.gpkg
+//    - GeoPackage wird direkt erkannt und kann geöffnet werden
+```
+
+### GML zu FlatGeobuf konvertieren (Cloud-optimiert)
+```typescript
+import { GmlParser, FlatGeobufBuilder, toFlatGeobuf } from '@npm9912/s-gml';
+
+// FlatGeobuf Builder
+const parser = new GmlParser(new FlatGeobufBuilder());
+
+// FeatureCollection zu FlatGeobuf
+const featureCollectionGml = `
+<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0"
+                        xmlns:gml="http://www.opengis.net/gml/3.2">
+  <wfs:member>
+    <Feature gml:id="F1">
+      <geometry>
+        <gml:Point><gml:pos>10 20</gml:pos></gml:Point>
+      </geometry>
+      <name>Location A</name>
+      <value>100</value>
+    </Feature>
+  </wfs:member>
+</wfs:FeatureCollection>`;
+
+const featureCollection = await parser.parse(featureCollectionGml);
+
+// Als FlatGeobuf exportieren
+const builder = new FlatGeobufBuilder();
+const fgbData = builder.toFlatGeobuf(featureCollection);
+
+// FlatGeobuf-Datei speichern (Node.js)
+import { writeFileSync } from 'fs';
+writeFileSync('output.fgb', fgbData);
+```
+
+**Vorteile von FlatGeobuf:**
+
+```typescript
+// ✅ Sehr kompakt (kleiner als GeoJSON/Shapefile)
+// ✅ Streaming-fähig (HTTP Range Requests)
+// ✅ Spatial Index für schnelle Abfragen
+// ✅ Cloud-optimiert für S3/Azure Blob/GCS
+// ✅ Sehr schnell zu lesen und schreiben
+```
+
+**Integration mit GmlParser:**
+
+```typescript
+// Direkter Export von GML zu FlatGeobuf
+const gmlXml = `
+<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0"
+                        xmlns:gml="http://www.opengis.net/gml/3.2">
+  <wfs:member>
+    <TestFeature gml:id="F1">
+      <geometry>
+        <gml:Point><gml:pos>10 20</gml:pos></gml:Point>
+      </geometry>
+      <name>Test Location</name>
+    </TestFeature>
+  </wfs:member>
+</wfs:FeatureCollection>`;
+
+// Variante 1: Mit FlatGeobufBuilder
+const parser = new GmlParser(new FlatGeobufBuilder());
+const featureCollection = await parser.parse(gmlXml);
+const fgb = new FlatGeobufBuilder().toFlatGeobuf(featureCollection);
+
+// Variante 2: Mit getBuilder
+import { getBuilder } from '@npm9912/s-gml';
+const fgbParser = new GmlParser(getBuilder('flatgeobuf'));
+const fc = await fgbParser.parse(gmlXml);
+```
+
+**Helper-Funktion:**
+
+```typescript
+import { toFlatGeobuf } from '@npm9912/s-gml';
+
+// Schneller Export ohne Builder-Instanz
+const fgb = toFlatGeobuf(featureCollection);
+
+// Binäre Daten als Uint8Array
+console.log(fgb instanceof Uint8Array); // true
+```
+
+**Kompatibilität mit GIS-Software:**
+
+```typescript
+// ✅ QGIS 3.x+
+// ✅ GDAL/OGR 3.1+
+// ✅ GeoPandas (mit fiona)
+// ✅ Leaflet (mit flatgeobuf.js)
+// ✅ OpenLayers (mit flatgeobuf)
+// ✅ MapLibre GL JS
+// ✅ DuckDB Spatial
+
+// Web-Mapping mit HTTP Range Requests
+// FlatGeobuf ist ideal für Cloud-Storage da es
+// nur die benötigten Teile der Datei lädt
+```
+
 ### GML Versionen konvertieren
 ```typescript
 const parser = new GmlParser();
@@ -1428,6 +1652,8 @@ Die Bibliothek unterstützt verschiedene Output-Formate durch Builder-Klassen:
 | ------- | ------ | ------------ | ---------- |
 | `GeoJsonBuilder` | GeoJSON | Standard-Format für Web-GIS | `new GmlParser()` oder `new GmlParser('geojson')` |
 | `ShapefileBuilder` | Shapefile | ESRI Shapefile (ZIP mit .shp/.shx/.dbf/.prj) | `new GmlParser('shapefile')` oder `new GmlParser('shp')` |
+| `GeoPackageBuilder` | GeoPackage | OGC GeoPackage (.gpkg) SQLite-basiert | `new GmlParser('geopackage')` oder `new GmlParser('gpkg')` |
+| `FlatGeobufBuilder` | FlatGeobuf | Performance-optimiert (.fgb) Binär-Format | `new GmlParser('flatgeobuf')` oder `new GmlParser('fgb')` |
 | `CsvBuilder` | CSV + WKT | Tabelle mit WKT-Geometrien | `new GmlParser('csv')` |
 | `KmlBuilder` | KML | Google Earth / Maps | `new GmlParser('kml')` |
 | `WktBuilder` | WKT | Well-Known Text | `new GmlParser('wkt')` |
@@ -1582,7 +1808,7 @@ const builder = getBuilder('csv');  // Gibt CsvBuilder zurück
 const parser = new GmlParser(builder);
 
 // Unterstützte Formate:
-// 'geojson', 'shapefile', 'shp', 'csv', 'kml', 'wkt', 'cis-json', 'coveragejson'
+// 'geojson', 'shapefile', 'shp', 'geopackage', 'gpkg', 'flatgeobuf', 'fgb', 'csv', 'kml', 'wkt', 'cis-json', 'coveragejson'
 ```
 
 ### Custom Builder erstellen

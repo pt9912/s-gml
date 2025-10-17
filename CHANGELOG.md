@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2025-10-17
+
+### Added
+- **GeoPackage Builder with Export Support**
+  - New `GeoPackageBuilder` class using @ngageoint/geopackage
+  - `toGeoPackage()` method for generating OGC GeoPackage (.gpkg) files
+  - Support for custom table names via options
+  - SQLite-based geospatial database format
+  - 18 comprehensive tests for GeoPackage generation
+  - CLI support with `--format geopackage` or `--format gpkg`
+
+- **FlatGeobuf Builder with Binary Export**
+  - New `FlatGeobufBuilder` class using flatgeobuf library
+  - `toFlatGeobuf()` method for generating FlatGeobuf (.fgb) binary files
+  - Performance-optimized binary geospatial format with spatial indexing
+  - Magic bytes validation in tests
+  - 19 comprehensive tests including performance benchmarks
+  - CLI support with `--format flatgeobuf` or `--format fgb`
+
+- **Comprehensive Unit Tests for Coverage Builders**
+  - 24 unit tests for `CisJsonBuilder` covering all geometry types and coverage types
+  - 24 unit tests for `CoverageJsonBuilder` with CRS referencing tests
+  - Tests for RectifiedGridCoverage, GridCoverage, ReferenceableGridCoverage, MultiPointCoverage
+  - Builder integration tests with GmlParser
+  - Error handling tests for unsupported geometry types
+  - Coverage-specific feature tests (with/without file references)
+
+- **Jest ESM Mock Infrastructure**
+  - Global Jest setup file (`test/setup.ts`) for ESM module mocking
+  - Mock implementations for flatgeobuf and @ngageoint/geopackage libraries
+  - Proper handling of ESM-only dependencies in test environment
+  - Total test count: 499 tests (up from 414)
+
+### Changed
+- **Jest Configuration**
+  - Added `setupFilesAfterEnv` pointing to `test/setup.ts`
+  - Global mocks for flatgeobuf and @ngageoint/geopackage ESM modules
+  - Improved test reliability with centralized mocking
+
+- **ESLint Configuration**
+  - Extended `.eslintignore` to exclude `test/__mocks__/` directory
+  - Cleaner lint output without mock-related warnings
+
+- **README.md**
+  - Added GeoPackage builder documentation with usage examples
+  - Added FlatGeobuf builder documentation with usage examples
+  - Updated builder table to include GeoPackage and FlatGeobuf
+  - Updated CLI format options to include gpkg and fgb aliases
+
+### Test Coverage
+- Overall statement coverage: 78.15%
+- CisJsonBuilder coverage: 82.85%
+- CoverageJsonBuilder coverage: 84.94%
+- GeoPackageBuilder coverage: 48.38% (mocked external library)
+- FlatGeobufBuilder coverage: 40.74% (mocked external library)
+
 ## [1.6.0] - 2025-10-16
 
 ### Added
@@ -338,6 +394,7 @@ const parser = new GmlParser(new MyBuilder());
 - CLI tool for GML operations
 - GeoJSON conversion
 
+[1.7.0]: https://github.com/pt9912/s-gml/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/pt9912/s-gml/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/pt9912/s-gml/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/pt9912/s-gml/compare/v1.3.0...v1.4.0
