@@ -15,10 +15,10 @@ graph TB
     end
 
     subgraph "Parser-Layer"
-        GmlParser[GmlParser<br/>Hauptklasse]
-        StreamingParser[StreamingGmlParser<br/>Streaming für große Dateien]
-        XMLParser[fast-xml-parser<br/>XML → Object]
-        Utils[Utilities<br/>Koordinaten, Version Detection]
+        GmlParser[GmlParser]
+        StreamingParser[StreamingGmlParser]
+        XMLParser[fast-xml-parser]
+        Utils[Utilities]
     end
 
     subgraph "Transformation-Layer"
@@ -35,10 +35,10 @@ graph TB
     end
 
     subgraph "Spezial-Module"
-        WCS[WCS Module<br/>Request Builder & Capabilities Parser]
-        Coverage[Coverage Generator<br/>WCS 2.0 XML Generation]
-        Performance[Performance Module<br/>Monitoring, Batching, Caching]
-        Validator[Validator<br/>XSD Validation]
+        WCS[WCS Module]
+        Coverage[Coverage Generator]
+        Performance[Performance Module]
+        Validator[Validator]
         OWS[OWS Exception Handler]
     end
 
@@ -271,11 +271,11 @@ sequenceDiagram
 
 ```mermaid
 graph LR
-    GML[GmlGeometry<br/>GmlFeature<br/>GmlFeatureCollection] --> Builder{Builder Interface}
-    Builder --> GeoJson[buildPoint()<br/>buildFeature()<br/>→ GeoJSON]
-    Builder --> Shapefile[buildPoint()<br/>toZip()<br/>→ Shapefile ZIP]
-    Builder --> GeoPackage[buildFeature()<br/>toGeoPackage()<br/>→ .gpkg]
-    Builder --> CSV[buildPoint()<br/>→ WKT String<br/>→ CSV]
+    GML[GML Types] --> Builder{Builder Interface}
+    Builder --> GeoJson[GeoJSON Builder]
+    Builder --> Shapefile[Shapefile Builder]
+    Builder --> GeoPackage[GeoPackage Builder]
+    Builder --> CSV[CSV Builder]
 
     style GML fill:#e1f5ff
     style Builder fill:#fff3e0
@@ -285,6 +285,13 @@ graph LR
     style CSV fill:#e8f5e9
 ```
 
+**Transformation Details:**
+- **GML Types**: `GmlGeometry`, `GmlFeature`, `GmlFeatureCollection`
+- **GeoJSON Builder**: `buildPoint()`, `buildFeature()` → GeoJSON
+- **Shapefile Builder**: `buildPoint()`, `toZip()` → Shapefile ZIP
+- **GeoPackage Builder**: `buildFeature()`, `toGeoPackage()` → .gpkg
+- **CSV Builder**: `buildPoint()` → WKT String → CSV
+
 ## Performance-Charakteristiken
 
 ### Parser-Auswahl-Entscheidungsbaum
@@ -292,17 +299,17 @@ graph LR
 ```mermaid
 graph TD
     Start{Dateigröße?}
-    Start -->|< 10 MB| Standard[GmlParser<br/>Standard-Modus]
+    Start -->|< 10 MB| Standard[GmlParser Standard]
     Start -->|10-100 MB| Medium{RAM verfügbar?}
-    Start -->|> 100 MB| Large[StreamingGmlParser<br/>Batch-Verarbeitung]
+    Start -->|> 100 MB| Large[StreamingGmlParser Batch]
 
-    Medium -->|> 4 GB| Standard2[GmlParser<br/>Akzeptabel]
-    Medium -->|< 4 GB| Stream[StreamingGmlParser<br/>Empfohlen]
+    Medium -->|> 4 GB| Standard2[GmlParser Akzeptabel]
+    Medium -->|< 4 GB| Stream[StreamingGmlParser Empfohlen]
 
-    Standard --> Output1[Speicher: ~3x Dateigröße<br/>Speed: Schnell]
-    Standard2 --> Output2[Speicher: ~3x Dateigröße<br/>Speed: Schnell]
-    Stream --> Output3[Speicher: Konstant ~50 MB<br/>Speed: Moderat]
-    Large --> Output4[Speicher: Konstant ~50 MB<br/>Speed: Langsam aber stabil]
+    Standard --> Output1[Speicher: 3x Dateigröße / Speed: Schnell]
+    Standard2 --> Output2[Speicher: 3x Dateigröße / Speed: Schnell]
+    Stream --> Output3[Speicher: Konstant 50 MB / Speed: Moderat]
+    Large --> Output4[Speicher: Konstant 50 MB / Speed: Stabil]
 
     style Start fill:#fff3e0
     style Standard fill:#e8f5e9
