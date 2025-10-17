@@ -69,7 +69,7 @@ describe('Docker Integration Tests', () => {
         // Check if Docker image exists, if not skip tests
         try {
             await execAsync(`docker image inspect ${DOCKER_IMAGE}`);
-        } catch (error) {
+        } catch {
             console.log(`Docker image ${DOCKER_IMAGE} not found. Skipping Docker integration tests.`);
             console.log('Run "docker pull ghcr.io/pt9912/s-gml:latest" to enable these tests.');
         }
