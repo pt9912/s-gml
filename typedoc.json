@@ -1,0 +1,73 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./src/index.ts"],
+  "out": "./docs/api",
+  "name": "@npm9912/s-gml - API Documentation",
+  "includeVersion": true,
+  "readme": "./README.md",
+  "plugin": [],
+  "theme": "default",
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeInternal": false,
+  "hideGenerator": false,
+  "disableSources": false,
+  "categorizeByGroup": true,
+  "defaultCategory": "Other",
+  "categoryOrder": [
+    "Parser",
+    "Builder",
+    "WCS",
+    "Coverage",
+    "Performance",
+    "Types",
+    "Utilities",
+    "Error Handling",
+    "*"
+  ],
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true,
+    "includeFolders": true
+  },
+  "searchCategoryBoosts": {
+    "Parser": 1.5,
+    "Builder": 1.5
+  },
+  "sort": ["source-order", "required-first", "kind"],
+  "kindSortOrder": [
+    "Class",
+    "Interface",
+    "TypeAlias",
+    "Function",
+    "Variable"
+  ],
+  "visibilityFilters": {
+    "protected": true,
+    "private": false,
+    "inherited": true,
+    "external": false
+  },
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/test/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ],
+  "externalPattern": [
+    "**/node_modules/**"
+  ],
+  "excludeExternals": true,
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "notDocumented": false
+  },
+  "gitRevision": "main",
+  "gitRemote": "origin",
+  "githubPages": false,
+  "basePath": ".",
+  "treatWarningsAsErrors": false,
+  "treatValidationWarningsAsErrors": false
+}

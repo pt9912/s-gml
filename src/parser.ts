@@ -57,13 +57,100 @@ const GEOMETRY_ELEMENT_NAMES = new Set([
 //     'GMLJP2RectifiedGridCoverage',
 // ]);
 
+/**
+ * Haupt-Parser-Klasse für GML-Dokumente (Geography Markup Language).
+ *
+ * Diese Klasse parsed GML 2.1.2, 3.0, 3.1, 3.2 und 3.3 Dokumente und konvertiert
+ * sie in verschiedene Output-Formate mittels dem Builder-Pattern.
+ *
+ * @example
+ * ```typescript
+ * // Standard GeoJSON Output
+ * const parser = new GmlParser();
+ * const geojson = await parser.parse(gmlXml);
+ *
+ * // Shapefile Output
+ * const shpParser = new GmlParser('shapefile');
+ * const featureCollection = await shpParser.parse(gmlXml);
+ * const zip = await new ShapefileBuilder().toZip(featureCollection);
+ *
+ * // Custom Builder
+ * const customParser = new GmlParser(new MyCustomBuilder());
+ * const customOutput = await customParser.parse(gmlXml);
+ * ```
+ *
+ * @public
+ * @category Parser
+ */
 export class GmlParser {
+    /**
+     * Builder-Instanz zur Transformation von GML in das Zielformat.
+     * @private
+     */
     private builder: Builder;
 
+    /**
+     * Erstellt eine neue GmlParser-Instanz.
+     *
+     * @param targetFormat - Output-Format oder custom Builder-Instanz.
+     *                       Unterstützte Formate: 'geojson', 'shapefile', 'geopackage',
+     *                       'flatgeobuf', 'csv', 'kml', 'wkt', 'cis-json', 'coveragejson'
+     *
+     * @example
+     * ```typescript
+     * // GeoJSON (Standard)
+     * const parser1 = new GmlParser();
+     * const parser2 = new GmlParser('geojson');
+     *
+     * // Andere Formate
+     * const csvParser = new GmlParser('csv');
+     * const kmlParser = new GmlParser('kml');
+     *
+     * // Custom Builder
+     * const customParser = new GmlParser(new MyBuilder());
+     * ```
+     *
+     * @public
+     */
     constructor(targetFormat: string | Builder = 'geojson') {
         this.builder = typeof targetFormat === 'string' ? getBuilder(targetFormat) : targetFormat;
     }
 
+    /**
+     * Parsed ein GML-Dokument und konvertiert es in das konfigurierte Zielformat.
+     *
+     * Unterstützt alle GML-Geometrien (Point, LineString, Polygon, Multi*, Curve, Surface, etc.),
+     * Features, FeatureCollections und Coverages (RectifiedGrid, Grid, ReferenceableGrid, MultiPoint).
+     *
+     * @param xml - GML XML-String zum Parsen
+     * @returns Promise mit Geometry, Feature oder FeatureCollection im konfigurierten Zielformat
+     *
+     * @throws {OwsExceptionError} - Bei WFS/WCS Exception Reports
+     * @throws {Error} - Bei ungültigem oder nicht unterstütztem GML
+     *
+     * @example
+     * ```typescript
+     * const parser = new GmlParser();
+     *
+     * // Point parsen
+     * const point = await parser.parse(`
+     *   <gml:Point xmlns:gml="http://www.opengis.net/gml/3.2">
+     *     <gml:pos>10.0 20.0</gml:pos>
+     *   </gml:Point>
+     * `);
+     * // { type: 'Point', coordinates: [10, 20] }
+     *
+     * // FeatureCollection parsen
+     * const fc = await parser.parse(wfsResponse);
+     * // { type: 'FeatureCollection', features: [...] }
+     *
+     * // Coverage parsen
+     * const coverage = await parser.parse(wcsCoverageXml);
+     * // { type: 'Feature', properties: { coverageType: 'RectifiedGridCoverage', ... } }
+     * ```
+     *
+     * @public
+     */
     async parse(xml: string): Promise<Geometry | Feature | FeatureCollection> {
         const doc = await parseXml(xml);
         const version = detectGmlVersion(doc);
@@ -71,11 +158,70 @@ export class GmlParser {
         return this.toGeoJson(gmlObject);
     }
 
+    /**
+     * Lädt und parsed ein GML-Dokument von einer URL.
+     *
+     * Nützlich für das direkte Laden von WFS GetFeature oder WCS GetCoverage Responses.
+     *
+     * @param url - URL zum GML-Dokument (z.B. WFS GetFeature Request)
+     * @returns Promise mit Geometry, Feature oder FeatureCollection
+     *
+     * @throws {Error} - Bei HTTP-Fehlern (404, 500, etc.)
+     * @throws {OwsExceptionError} - Bei WFS/WCS Exception Reports
+     *
+     * @example
+     * ```typescript
+     * const parser = new GmlParser();
+     *
+     * // WFS GetFeature laden
+     * const features = await parser.parseFromUrl(
+     *   'https://example.com/wfs?service=WFS&request=GetFeature&typeName=water_areas'
+     * );
+     *
+     * // WCS GetCoverage laden
+     * const coverage = await parser.parseFromUrl(
+     *   'https://example.com/wcs?service=WCS&request=GetCoverage&coverageId=DEM'
+     * );
+     * ```
+     *
+     * @public
+     */
     async parseFromUrl(url: string): Promise<Geometry | Feature | FeatureCollection> {
         const xml = await this.fetchXml(url);
         return this.parse(xml);
     }
 
+    /**
+     * Konvertiert ein GML-Dokument zwischen verschiedenen GML-Versionen.
+     *
+     * Unterstützt Konvertierung zwischen GML 2.1.2 und 3.2.
+     *
+     * @param xml - GML XML-String zum Konvertieren
+     * @param options - Konvertierungs-Optionen
+     * @returns Promise mit konvertiertem GML XML-String
+     *
+     * @throws {Error} - Bei nicht unterstützten Versionen oder ungültigem GML
+     *
+     * @example
+     * ```typescript
+     * const parser = new GmlParser();
+     *
+     * // GML 3.2 → 2.1.2 konvertieren
+     * const gml32 = `<gml:Point xmlns:gml="http://www.opengis.net/gml/3.2">
+     *   <gml:pos>10 20</gml:pos>
+     * </gml:Point>`;
+     *
+     * const gml212 = await parser.convert(gml32, {
+     *   outputVersion: '2.1.2',
+     *   prettyPrint: true
+     * });
+     * // <gml:Point xmlns:gml="http://www.opengis.net/gml">
+     * //   <gml:coordinates>10,20</gml:coordinates>
+     * // </gml:Point>
+     * ```
+     *
+     * @public
+     */
     async convert(xml: string, options: GmlConvertOptions): Promise<string> {
         const { outputVersion, prettyPrint = false } = options;
         const doc = await parseXml(xml);
@@ -84,6 +230,27 @@ export class GmlParser {
         return generateGml(gmlObject, outputVersion, prettyPrint);
     }
 
+    /**
+     * Lädt ein GML-Dokument von einer URL und konvertiert es zu einer anderen Version.
+     *
+     * @param url - URL zum GML-Dokument
+     * @param options - Konvertierungs-Optionen
+     * @returns Promise mit konvertiertem GML XML-String
+     *
+     * @throws {Error} - Bei HTTP-Fehlern oder Konvertierungs-Fehlern
+     *
+     * @example
+     * ```typescript
+     * const parser = new GmlParser();
+     *
+     * const gml212 = await parser.convertFromUrl(
+     *   'https://example.com/data.gml',
+     *   { outputVersion: '2.1.2', prettyPrint: true }
+     * );
+     * ```
+     *
+     * @public
+     */
     async convertFromUrl(url: string, options: GmlConvertOptions): Promise<string> {
         const xml = await this.fetchXml(url);
         return this.convert(xml, options);
@@ -97,6 +264,33 @@ export class GmlParser {
         return await response.text();
     }
 
+    /**
+     * Konvertiert ein bereits geparsten GML-Objekt zurück zu GML XML.
+     *
+     * Nützlich für Round-Trip-Konvertierungen oder Modifikationen von GML-Daten.
+     *
+     * @param gmlObject - Geparste GML-Geometrie, Feature oder FeatureCollection
+     * @param options - Output-Optionen (Version, Formatierung)
+     * @returns Promise mit GML XML-String
+     *
+     * @example
+     * ```typescript
+     * const parser = new GmlParser();
+     *
+     * // GML parsen
+     * const doc = await parseXml(gmlXml);
+     * const version = detectGmlVersion(doc);
+     * const gmlObject = parser.parseGml(doc, version);
+     *
+     * // Zurück zu XML konvertieren
+     * const xml = await parser.convertGeometry(gmlObject, {
+     *   outputVersion: '2.1.2',
+     *   prettyPrint: true
+     * });
+     * ```
+     *
+     * @public
+     */
     async convertGeometry(gmlObject: GmlGeometry | GmlFeature | GmlFeatureCollection, options: Pick<GmlConvertOptions, 'outputVersion' | 'prettyPrint'>): Promise<string> {
         return generateGml(gmlObject, options.outputVersion, options.prettyPrint);
     }

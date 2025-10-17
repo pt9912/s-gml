@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"Antworte ab jetzt ausschließlich auf Deutsch, es sei denn, der Nutzer bittet ausdrücklich um eine andere Sprache.\"}}'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash(git push*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/post-push-actions-check.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
