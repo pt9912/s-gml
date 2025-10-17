@@ -214,27 +214,164 @@ export type Geometry = GeoJsonGeometry;
 export type Feature = GeoJsonFeature<Geometry>;
 export type FeatureCollection = GeoJsonFeatureCollection<Geometry>;
 
+/**
+ * Builder-Interface für die Transformation von GML zu verschiedenen Output-Formaten.
+ *
+ * Implementierungen dieses Interfaces können als `targetFormat` an den GmlParser
+ * übergeben werden um custom Output-Formate zu erstellen.
+ *
+ * @typeParam TGeometry - Typ für Geometrie-Output (z.B. GeoJSON Geometry, WKT String)
+ * @typeParam TFeature - Typ für Feature-Output (z.B. GeoJSON Feature, CSV Row)
+ * @typeParam TFeatureCollection - Typ für FeatureCollection-Output
+ *
+ * @example
+ * ```typescript
+ * class MyCustomBuilder implements Builder<string, string, string> {
+ *   buildPoint(gml: GmlPoint): string {
+ *     return `POINT(${gml.coordinates.join(' ')})`;
+ *   }
+ *
+ *   buildFeature(gml: GmlFeature): string {
+ *     return `Feature ID: ${gml.id}`;
+ *   }
+ *
+ *   buildFeatureCollection(gml: GmlFeatureCollection): string {
+ *     return `Collection with ${gml.features.length} features`;
+ *   }
+ *
+ *   // ... alle weiteren Methoden implementieren
+ * }
+ *
+ * const parser = new GmlParser(new MyCustomBuilder());
+ * const output = await parser.parse(gmlXml); // String output
+ * ```
+ *
+ * @public
+ * @category Builder
+ * @interface
+ */
 export interface Builder<
     TGeometry = Geometry,
     TFeature = Feature,
     TFeatureCollection = FeatureCollection
 > {
+    /**
+     * Baut ein Point-Objekt aus einem GmlPoint.
+     * @param gml - GmlPoint zum Konvertieren
+     * @returns Point im Zielformat
+     */
     buildPoint(gml: GmlPoint): TGeometry;
+
+    /**
+     * Baut ein LineString-Objekt aus einem GmlLineString.
+     * @param gml - GmlLineString zum Konvertieren
+     * @returns LineString im Zielformat
+     */
     buildLineString(gml: GmlLineString): TGeometry;
+
+    /**
+     * Baut ein Polygon-Objekt aus einem GmlPolygon.
+     * @param gml - GmlPolygon zum Konvertieren
+     * @returns Polygon im Zielformat
+     */
     buildPolygon(gml: GmlPolygon): TGeometry;
+
+    /**
+     * Baut ein MultiPoint-Objekt aus einem GmlMultiPoint.
+     * @param gml - GmlMultiPoint zum Konvertieren
+     * @returns MultiPoint im Zielformat
+     */
     buildMultiPoint(gml: GmlMultiPoint): TGeometry;
+
+    /**
+     * Baut ein MultiLineString-Objekt aus einem GmlMultiLineString.
+     * @param gml - GmlMultiLineString zum Konvertieren
+     * @returns MultiLineString im Zielformat
+     */
     buildMultiLineString(gml: GmlMultiLineString): TGeometry;
+
+    /**
+     * Baut ein MultiPolygon-Objekt aus einem GmlMultiPolygon.
+     * @param gml - GmlMultiPolygon zum Konvertieren
+     * @returns MultiPolygon im Zielformat
+     */
     buildMultiPolygon(gml: GmlMultiPolygon): TGeometry;
+
+    /**
+     * Baut ein LinearRing-Objekt aus einem GmlLinearRing.
+     * @param gml - GmlLinearRing zum Konvertieren
+     * @returns LinearRing im Zielformat (meist als LineString)
+     */
     buildLinearRing(gml: GmlLinearRing): TGeometry;
+
+    /**
+     * Baut ein Feature-Objekt aus einem GmlEnvelope (Bounding Box).
+     * @param gml - GmlEnvelope zum Konvertieren
+     * @returns Feature mit bbox im Zielformat
+     */
     buildEnvelope(gml: GmlEnvelope): TFeature;
+
+    /**
+     * Baut ein Feature-Objekt aus einem GmlBox.
+     * @param gml - GmlBox zum Konvertieren
+     * @returns Feature mit Box-Geometrie im Zielformat
+     */
     buildBox(gml: GmlBox): TFeature;
+
+    /**
+     * Baut ein Curve-Objekt aus einem GmlCurve.
+     * @param gml - GmlCurve zum Konvertieren
+     * @returns Curve (meist als LineString) im Zielformat
+     */
     buildCurve(gml: GmlCurve): TGeometry;
+
+    /**
+     * Baut ein Surface-Objekt aus einem GmlSurface.
+     * @param gml - GmlSurface zum Konvertieren
+     * @returns Surface (meist als MultiPolygon) im Zielformat
+     */
     buildSurface(gml: GmlSurface): TGeometry;
+
+    /**
+     * Baut ein Feature aus einem RectifiedGridCoverage (georeferenziertes Raster).
+     * @param gml - GmlRectifiedGridCoverage zum Konvertieren
+     * @returns Feature mit Coverage-Metadaten im Zielformat
+     */
     buildRectifiedGridCoverage(gml: GmlRectifiedGridCoverage): TFeature;
+
+    /**
+     * Baut ein Feature aus einem GridCoverage (nicht-georeferenziertes Raster).
+     * @param gml - GmlGridCoverage zum Konvertieren
+     * @returns Feature mit Coverage-Metadaten im Zielformat
+     */
     buildGridCoverage(gml: GmlGridCoverage): TFeature;
+
+    /**
+     * Baut ein Feature aus einem ReferenceableGridCoverage (unregelmäßig georeferenziertes Raster).
+     * @param gml - GmlReferenceableGridCoverage zum Konvertieren
+     * @returns Feature mit Coverage-Metadaten im Zielformat
+     */
     buildReferenceableGridCoverage(gml: GmlReferenceableGridCoverage): TFeature;
+
+    /**
+     * Baut ein Feature aus einem MultiPointCoverage (Coverage mit MultiPoint-Domäne).
+     * @param gml - GmlMultiPointCoverage zum Konvertieren
+     * @returns Feature mit Coverage-Metadaten im Zielformat
+     */
     buildMultiPointCoverage(gml: GmlMultiPointCoverage): TFeature;
+
+    /**
+     * Baut ein Feature-Objekt aus einem GmlFeature.
+     * @param gml - GmlFeature zum Konvertieren (inkl. Geometrie und Properties)
+     * @returns Feature im Zielformat
+     */
     buildFeature(gml: GmlFeature): TFeature;
+
+    /**
+     * Baut eine FeatureCollection aus einer GmlFeatureCollection.
+     * @param gml - GmlFeatureCollection zum Konvertieren
+     * @returns FeatureCollection im Zielformat
+     */
     buildFeatureCollection(gml: GmlFeatureCollection): TFeatureCollection;
 }
 
