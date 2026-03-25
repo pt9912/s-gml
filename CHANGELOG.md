@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-03-25
+
+### Added
+- **Browser-specific package entry**
+  - Added `browser` export condition for the package root
+  - Added explicit `@npm9912/s-gml/browser` entry point for browser-only consumers
+  - Added dedicated browser Rollup build producing `dist/index.browser.js`
+
+### Changed
+- **Browser import handling**
+  - Split parser wiring into shared base logic plus Node/browser-specific wrappers
+  - Added browser-safe builder resolver for static imports in browser providers
+  - Browser build now keeps `FlatGeobufBuilder` available while guarding Node-only builders
+
+### Fixed
+- **Static browser imports**
+  - Prevented browser bundles from pulling in `stream` through static `@npm9912/s-gml` imports
+  - Added explicit runtime errors for `ShapefileBuilder`, `GeoPackageBuilder`, `toShapefile()`, and `toGeoPackage()` in browser builds
+  - Added browser compatibility tests covering the new browser entry and `stream`-free output
+
+### Documentation
+- **README.md**
+  - Added browser/bundler usage guidance
+  - Documented the explicit `@npm9912/s-gml/browser` import path
+  - Documented that Shapefile and GeoPackage exports remain Node-only
+
 ## [1.7.0] - 2025-10-17
 
 ### Added
@@ -394,6 +420,7 @@ const parser = new GmlParser(new MyBuilder());
 - CLI tool for GML operations
 - GeoJSON conversion
 
+[1.7.1]: https://github.com/pt9912/s-gml/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/pt9912/s-gml/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/pt9912/s-gml/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/pt9912/s-gml/compare/v1.4.0...v1.5.0
