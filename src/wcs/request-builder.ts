@@ -3,7 +3,7 @@
  * @public
  * @category WCS
  */
-export type WcsVersion = '2.0.1' | '2.0.0' | '1.1.0' | '1.0.0';
+export type WcsVersion = '2.0.1' | '2.0.0' | '1.1.2' | '1.1.1' | '1.1.0' | '1.0.0';
 
 /**
  * WCS Subset-Definition für räumliches/zeitliches Subsetting.

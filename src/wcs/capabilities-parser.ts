@@ -8,8 +8,9 @@
  */
 
 import { XMLParser } from 'fast-xml-parser';
+import { WcsVersion } from './request-builder.js';
 
-export type WcsVersion = '2.0.1' | '2.0.0' | '1.1.2' | '1.1.1' | '1.1.0' | '1.0.0';
+export type { WcsVersion };
 
 export interface WcsServiceIdentification {
     title?: string;

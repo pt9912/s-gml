@@ -91,6 +91,7 @@ export class StreamingGmlParser {
     private buffer: string = '';
     private featureBatch: Feature[] = [];
     private featureCount: number = 0;
+    private recovering: boolean = false;
 
     /**
      * Erstellt eine neue StreamingGmlParser-Instanz.
@@ -117,16 +118,16 @@ export class StreamingGmlParser {
     on(event: 'feature', callback: FeatureCallback): this;
     on(event: 'error', callback: ErrorCallback): this;
     on(event: 'end', callback: EndCallback): this;
-    on(event: string, callback: any): this {
+    on(event: string, callback: FeatureCallback | ErrorCallback | EndCallback): this {
         switch (event) {
             case 'feature':
-                this.featureCallbacks.push(callback);
+                this.featureCallbacks.push(callback as FeatureCallback);
                 break;
             case 'error':
-                this.errorCallbacks.push(callback);
+                this.errorCallbacks.push(callback as ErrorCallback);
                 break;
             case 'end':
-                this.endCallbacks.push(callback);
+                this.endCallbacks.push(callback as EndCallback);
                 break;
         }
         return this;
@@ -232,21 +233,18 @@ export class StreamingGmlParser {
 
     private async parseNodeStream(stream: NodeJS.ReadableStream): Promise<void> {
         return new Promise((resolve, reject) => {
-            const chunks: string[] = [];
+            let processingChain = Promise.resolve();
 
             stream.on('data', (chunk: Buffer | string) => {
-                chunks.push(chunk.toString());
+                stream.pause();
+                processingChain = processingChain
+                    .then(() => this.processChunk(chunk.toString()))
+                    .then(() => { stream.resume(); })
+                    .catch(reject);
             });
 
-            stream.on('end', async () => {
-                try {
-                    for (const chunk of chunks) {
-                        await this.processChunk(chunk);
-                    }
-                    resolve();
-                } catch (error) {
-                    reject(error);
-                }
+            stream.on('end', () => {
+                processingChain.then(resolve).catch(reject);
             });
 
             stream.on('error', reject);
@@ -272,15 +270,26 @@ export class StreamingGmlParser {
     }
 
     private async processChunk(chunk: string): Promise<void> {
-        this.buffer += chunk;
+        if (this.recovering) {
+            // Skip data until we find the start of a new feature element
+            const recoveryMatch = chunk.search(/<(?:gml:)?featureMember|<(?:wfs:)?member[\s>]/);
+            if (recoveryMatch === -1) {
+                return;
+            }
+            this.recovering = false;
+            this.buffer = chunk.substring(recoveryMatch);
+        } else {
+            this.buffer += chunk;
+        }
 
         // Extract complete features from buffer
         await this.extractFeatures();
 
-        // Force flush if buffer is too large
+        // Force flush if buffer is too large (e.g. single feature exceeds limit)
         if (this.buffer.length > this.maxBufferSize) {
-            this.buffer = ''; // Drop incomplete feature to prevent OOM
-            this.emitError(new Error('Buffer overflow: Feature too large to process'));
+            this.emitError(new Error('Buffer overflow: Feature too large to process, skipping to next feature'));
+            this.buffer = '';
+            this.recovering = true;
         }
     }
 
@@ -399,8 +408,9 @@ export class StreamingGmlParser {
         }
     }
 
-    private isNodeStream(stream: any): stream is NodeJS.ReadableStream {
-        return stream && typeof stream.on === 'function' && typeof stream.read === 'function';
+    private isNodeStream(stream: ReadableStream<Uint8Array> | NodeJS.ReadableStream): stream is NodeJS.ReadableStream {
+        return typeof (stream as NodeJS.ReadableStream).on === 'function'
+            && typeof (stream as NodeJS.ReadableStream).read === 'function';
     }
 
     /**

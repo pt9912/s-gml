@@ -139,7 +139,8 @@ describe('Browser Compatibility', () => {
 
             // CLI should have native xmllint support
             expect(content).toContain('validateWithNativeXmllint');
-            expect(content).toContain('which xmllint');
+            // execFile is used instead of exec for security (no shell injection)
+            expect(content).toContain('execFile');
         });
 
         it('dist/index.browser.js should not import Node.js stream shims', () => {

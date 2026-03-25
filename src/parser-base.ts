@@ -228,6 +228,9 @@ export class GmlParser {
         const doc = await parseXml(xml);
         const inputVersion = options.inputVersion || detectGmlVersion(doc);
         const gmlObject = this.parseGml(doc, inputVersion);
+        if ('domainSet' in gmlObject) {
+            throw new Error('Coverage types cannot be converted with convert(). Use CoverageGenerator instead.');
+        }
         return generateGml(gmlObject, outputVersion, prettyPrint);
     }
 
@@ -296,7 +299,7 @@ export class GmlParser {
         return generateGml(gmlObject, options.outputVersion, options.prettyPrint);
     }
 
-    private parseGml(doc: any, version: GmlVersion): GmlGeometry | GmlFeature | GmlFeatureCollection {
+    private parseGml(doc: any, version: GmlVersion): GmlGeometry | GmlFeature | GmlFeatureCollection | GmlCoverage {
         const collectionNode = this.findFeatureCollectionNode(doc);
         if (collectionNode) {
             return this.parseFeatureCollection(collectionNode, version);
@@ -307,7 +310,7 @@ export class GmlParser {
         return this.parseElement(entry.key, entry.value, version);
     }
 
-    private parseElement(key: string, value: any, version: GmlVersion): GmlGeometry | GmlFeature | GmlFeatureCollection {
+    private parseElement(key: string, value: any, version: GmlVersion): GmlGeometry | GmlFeature | GmlFeatureCollection | GmlCoverage {
         const element = this.normalizeElement(value);
         const name = this.getLocalName(key, element);
 
@@ -342,13 +345,13 @@ export class GmlParser {
                 return this.parseFeatureCollection(element, version);
             case 'RectifiedGridCoverage':
             case 'GMLJP2RectifiedGridCoverage':
-                return this.parseRectifiedGridCoverage(element, version) as any;
+                return this.parseRectifiedGridCoverage(element, version);
             case 'GridCoverage':
-                return this.parseGridCoverage(element, version) as any;
+                return this.parseGridCoverage(element, version);
             case 'ReferenceableGridCoverage':
-                return this.parseReferenceableGridCoverage(element, version) as any;
+                return this.parseReferenceableGridCoverage(element, version);
             case 'MultiPointCoverage':
-                return this.parseMultiPointCoverage(element, version) as any;
+                return this.parseMultiPointCoverage(element, version);
             default:
                 throw new Error(`Unsupported GML element: ${name}`);
         }
@@ -404,9 +407,28 @@ export class GmlParser {
     private parseBox(element: any, version: GmlVersion): GmlBox {
         const coordinatesText = this.getText(element['gml:coordinates']);
         if (typeof coordinatesText !== 'string') throw new Error('Invalid GML Box');
-        const values = coordinatesText.trim().split(/\s+/).map(Number);
-        if (values.length < 4) throw new Error('Invalid GML Box');
-        return { type: 'Box', coordinates: [values[0], values[1], values[2], values[3]], srsName: element.$?.srsName, version };
+        const text = coordinatesText.trim();
+        let x1: number, y1: number, x2: number, y2: number;
+
+        if (text.includes(',')) {
+            // GML 2.1.2 standard format with explicit cs separator: "x1,y1 x2,y2"
+            const tuples = text.split(/\s+/);
+            if (tuples.length < 2) throw new Error('Invalid GML Box');
+            const lower = tuples[0].split(',').map(Number);
+            const upper = tuples[1].split(',').map(Number);
+            if (lower.length < 2 || upper.length < 2 || lower.some(isNaN) || upper.some(isNaN)) {
+                throw new Error('Invalid GML Box');
+            }
+            [x1, y1] = lower;
+            [x2, y2] = upper;
+        } else {
+            // Flat format where cs=space: "x1 y1 x2 y2"
+            const values = text.split(/\s+/).map(Number);
+            if (values.length < 4 || values.some(isNaN)) throw new Error('Invalid GML Box');
+            [x1, y1, x2, y2] = values;
+        }
+
+        return { type: 'Box', coordinates: [x1, y1, x2, y2], srsName: element.$?.srsName, version };
     }
 
     private parseCurve(element: any, version: GmlVersion): GmlCurve {

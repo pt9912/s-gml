@@ -2,17 +2,17 @@ import { validateXML } from 'xmllint-wasm';
 import { request as httpRequest } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { URL } from 'node:url';
-import { exec } from 'node:child_process';
+import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { writeFile, unlink, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 const GML_XSD_URLS: Record<string, string> = {
-    '2.1.2': 'http://schemas.opengis.net/gml/2.1.2/feature.xsd',
-    '3.2': 'http://schemas.opengis.net/gml/3.2.1/gml.xsd',
+    '2.1.2': 'https://schemas.opengis.net/gml/2.1.2/feature.xsd',
+    '3.2': 'https://schemas.opengis.net/gml/3.2.1/gml.xsd',
 };
 
 // WFS XSD URLs - currently unused as WFS responses with custom features
@@ -132,7 +132,7 @@ export async function validateGml(xml: string, version: string): Promise<boolean
 async function validateWithNativeXmllint(xml: string, xsdUrl: string): Promise<boolean> {
     // Check if xmllint is available
     try {
-        await execAsync('which xmllint');
+        await execFileAsync('which', ['xmllint']);
     } catch {
         throw new Error('xmllint not found');
     }
@@ -152,17 +152,11 @@ async function validateWithNativeXmllint(xml: string, xsdUrl: string): Promise<b
         // Write XML to temp file
         await writeFile(xmlFile, xml, 'utf-8');
 
-        let command: string;
-        if (isWfsResponse) {
-            // For WFS responses: only check well-formedness
-            // Full schema validation would require the application schema
-            command = `xmllint --noout "${xmlFile}"`;
-        } else {
-            // For plain GML: validate against schema
-            command = `xmllint --noout --schema "${xsdUrl}" "${xmlFile}"`;
-        }
+        const args = isWfsResponse
+            ? ['--noout', xmlFile]
+            : ['--noout', '--schema', xsdUrl, xmlFile];
 
-        const { stderr } = await execAsync(command, { maxBuffer: 10 * 1024 * 1024 });
+        const { stderr } = await execFileAsync('xmllint', args, { maxBuffer: 10 * 1024 * 1024 });
 
         // xmllint outputs validation messages to stderr even on success
         // Check if there are actual errors
@@ -176,7 +170,7 @@ async function validateWithNativeXmllint(xml: string, xsdUrl: string): Promise<b
         try {
             await unlink(xmlFile);
             // Try to remove the directory (will only work if empty)
-            await execAsync(`rmdir "${tempDir}"`).catch(() => { /* ignore errors */ });
+            await execFileAsync('rmdir', [tempDir]).catch(() => { /* ignore errors */ });
         } catch {
             // Ignore cleanup errors
         }
