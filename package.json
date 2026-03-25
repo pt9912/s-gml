@@ -14,16 +14,23 @@
     },
     "exports": {
         ".": {
+            "types": "./dist/index.d.ts",
+            "browser": "./dist/index.browser.js",
             "import": "./dist/index.js",
             "require": "./dist/index.cjs.js"
+        },
+        "./browser": {
+            "types": "./dist/index.browser.d.ts",
+            "import": "./dist/index.browser.js"
         }
     },
     "files": [
         "dist"
     ],
     "scripts": {
-        "build": "pnpm run build:esm && pnpm run build:cjs && pnpm run build:types && pnpm run build:cli",
+        "build": "pnpm run build:esm && pnpm run build:browser && pnpm run build:cjs && pnpm run build:types && pnpm run build:cli",
         "build:esm": "rollup -c rollup.esm.js",
+        "build:browser": "rollup -c rollup.browser.js",
         "build:cjs": "rollup -c rollup.cjs.js",
         "build:types": "tsc --emitDeclarationOnly",
         "build:cli": "rollup -c rollup.cli.js",

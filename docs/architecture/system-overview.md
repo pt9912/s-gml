@@ -8,6 +8,11 @@
 
 ```mermaid
 graph TB
+    subgraph "Package-Entry-Layer"
+        RootEntry["@npm9912/s-gml"]
+        BrowserEntry["@npm9912/s-gml/browser"]
+    end
+
     subgraph "Eingabe-Layer"
         XML[GML XML Document]
         URL[URL/Remote Source]
@@ -15,7 +20,9 @@ graph TB
     end
 
     subgraph "Parser-Layer"
-        GmlParser[GmlParser]
+        GmlParserNode[GmlParser Node Entry]
+        GmlParserBrowser[GmlParser Browser Entry]
+        GmlParserBase[GmlParser Base]
         StreamingParser[StreamingGmlParser]
         XMLParser[fast-xml-parser]
         Utils[Utilities]
@@ -23,6 +30,8 @@ graph TB
 
     subgraph "Transformation-Layer"
         Builder[Builder Interface]
+        NodeResolver[Node Builder Resolver]
+        BrowserResolver[Browser Builder Resolver]
         GeoJsonBuilder[GeoJsonBuilder]
         ShapefileBuilder[ShapefileBuilder]
         GeoPackageBuilder[GeoPackageBuilder]
@@ -55,15 +64,25 @@ graph TB
     end
 
     %% Datenfluss
-    XML --> GmlParser
-    URL --> GmlParser
+    RootEntry --> GmlParserNode
+    BrowserEntry --> GmlParserBrowser
+
+    XML --> GmlParserNode
+    XML --> GmlParserBrowser
+    URL --> GmlParserNode
+    URL --> GmlParserBrowser
     File --> StreamingParser
 
-    GmlParser --> XMLParser
+    GmlParserNode --> GmlParserBase
+    GmlParserBrowser --> GmlParserBase
+    GmlParserBase --> XMLParser
     StreamingParser --> XMLParser
     XMLParser --> Utils
 
-    GmlParser --> Builder
+    GmlParserNode --> NodeResolver
+    GmlParserBrowser --> BrowserResolver
+    NodeResolver --> Builder
+    BrowserResolver --> Builder
     StreamingParser --> Builder
 
     Builder --> GeoJsonBuilder
@@ -86,21 +105,28 @@ graph TB
     CisJsonBuilder --> CisJson
     CoverageJsonBuilder --> CoverageJson
 
-    GmlParser -.-> WCS
-    GmlParser -.-> Coverage
-    GmlParser -.-> Performance
-    GmlParser -.-> Validator
-    GmlParser -.-> OWS
+    GmlParserNode -.-> WCS
+    GmlParserNode -.-> Coverage
+    GmlParserNode -.-> Performance
+    GmlParserNode -.-> Validator
+    GmlParserNode -.-> OWS
+    GmlParserBrowser -.-> WCS
+    GmlParserBrowser -.-> Coverage
+    GmlParserBrowser -.-> Performance
+    GmlParserBrowser -.-> Validator
+    GmlParserBrowser -.-> OWS
 
     classDef inputClass fill:#e1f5ff,stroke:#01579b,stroke-width:2px
     classDef parserClass fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef builderClass fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef outputClass fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
     classDef specialClass fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef entryClass fill:#ede7f6,stroke:#4527a0,stroke-width:2px
 
     class XML,URL,File inputClass
-    class GmlParser,StreamingParser,XMLParser,Utils parserClass
-    class Builder,GeoJsonBuilder,ShapefileBuilder,GeoPackageBuilder,FlatGeobufBuilder,CsvBuilder,KmlBuilder,WktBuilder,CisJsonBuilder,CoverageJsonBuilder builderClass
+    class RootEntry,BrowserEntry entryClass
+    class GmlParserNode,GmlParserBrowser,GmlParserBase,StreamingParser,XMLParser,Utils parserClass
+    class Builder,NodeResolver,BrowserResolver,GeoJsonBuilder,ShapefileBuilder,GeoPackageBuilder,FlatGeobufBuilder,CsvBuilder,KmlBuilder,WktBuilder,CisJsonBuilder,CoverageJsonBuilder builderClass
     class GeoJSON,Shapefile,GeoPackage,FlatGeobuf,CSV,KML,WKT,CisJson,CoverageJson outputClass
     class WCS,Coverage,Performance,Validator,OWS specialClass
 ```
@@ -115,10 +141,16 @@ graph TB
 ### 2. **Parser-Layer**
 | Komponente | Zweck | Verwendung |
 |------------|-------|------------|
-| `GmlParser` | Haupt-Parser-Klasse | Standard-Parsing für < 100 MB Dateien |
+| `GmlParser Base` | Gemeinsame Parser-Logik | Interne Basis für Node- und Browser-Entry |
+| `GmlParser (Node Entry)` | Haupt-Parser-Klasse für Node.js | Standard-Parsing für < 100 MB Dateien, CLI |
+| `GmlParser (Browser Entry)` | Browser-spezifischer Parser-Entry | Statische Browser-Imports ohne Node-Builtins |
 | `StreamingGmlParser` | Event-basierter Streaming-Parser | Große Dateien (> 100 MB) |
 | `fast-xml-parser` | XML → JavaScript Object Konvertierung | Intern verwendet |
 | `Utils` | Koordinaten-Parsing, Versions-Detection | Helper-Funktionen |
+
+**Packaging-Hinweis:**
+- Der Paket-Root `@npm9912/s-gml` verwendet eine `browser`-Export-Condition
+- Für explizite Browser-Imports steht `@npm9912/s-gml/browser` zur Verfügung
 
 ### 3. **Transformation-Layer (Builder Pattern)**
 Alle Builder implementieren das `Builder<TGeometry, TFeature, TFeatureCollection>` Interface:
@@ -136,14 +168,18 @@ interface Builder<TGeometry, TFeature, TFeatureCollection> {
 
 **Verfügbare Builder:**
 - **GeoJsonBuilder** *(Standard)*: GeoJSON RFC 7946
-- **ShapefileBuilder**: ESRI Shapefile (ZIP mit .shp, .shx, .dbf, .prj)
-- **GeoPackageBuilder**: OGC GeoPackage (SQLite)
-- **FlatGeobufBuilder**: Cloud-optimiertes Binärformat
+- **ShapefileBuilder**: ESRI Shapefile (ZIP mit .shp, .shx, .dbf, .prj), im Browser-Build nur als Guard-Export
+- **GeoPackageBuilder**: OGC GeoPackage (SQLite), im Browser-Build nur als Guard-Export
+- **FlatGeobufBuilder**: Cloud-optimiertes Binärformat, auch im Browser-Build verfügbar
 - **CsvBuilder**: CSV mit WKT-Geometrien
 - **KmlBuilder**: Google Earth KML 2.2
 - **WktBuilder**: Well-Known Text
 - **CisJsonBuilder**: OGC Coverage Implementation Schema JSON
 - **CoverageJsonBuilder**: OGC CoverageJSON
+
+**Resolver-Schicht:**
+- **Node Builder Resolver** (`src/builders/index.ts`): Vollständiger Builder-Satz für Node.js
+- **Browser Builder Resolver** (`src/builders/browser.ts`): Browser-sicherer Builder-Satz ohne Node-only Exporte
 
 ### 4. **Spezial-Module**
 
@@ -164,6 +200,11 @@ interface Builder<TGeometry, TFeature, TFeatureCollection> {
 #### **Validator** (`src/validator.*.ts`)
 - XSD-Validierung gegen offizielle GML-Schemata
 - Plattform-spezifische Implementierungen (Node.js, Browser)
+
+#### **Browser Packaging**
+- Dedizierter Browser-Build via `src/index.browser.ts`
+- Browser-Resolver verhindert statisches Einziehen von `stream` und anderen Node-Builtins
+- `ShapefileBuilder`, `GeoPackageBuilder`, `toShapefile()` und `toGeoPackage()` werfen im Browser-Build gezielte Laufzeitfehler
 
 #### **OWS Exception Handler** (`src/ows-exception.ts`)
 - Automatische Erkennung von WFS/WCS Exception Reports
@@ -207,10 +248,18 @@ interface Builder<TGeometry, TFeature, TFeatureCollection> {
 
 ### Factory Pattern
 - **Zweck**: Zentrale Builder-Erstellung via `getBuilder(format)`
-- **Vorteil**: Vereinfachte API, konsistente Builder-Instanziierung
+- **Vorteil**: Vereinfachte API, konsistente Builder-Instanziierung je Plattform
 - **Verwendung**:
   ```typescript
   const builder = getBuilder('csv'); // Gibt CsvBuilder zurück
+  ```
+
+### Platform Adapter Pattern
+- **Zweck**: Gleiche öffentliche API mit unterschiedlichen Entry-Points für Node.js und Browser
+- **Vorteil**: Browser-Bundles bleiben frei von Node-Builtins bei statischen Imports
+- **Verwendung**:
+  ```typescript
+  import { GmlParser } from '@npm9912/s-gml/browser';
   ```
 
 ## Datenfluss-Diagramme
@@ -246,7 +295,7 @@ sequenceDiagram
 sequenceDiagram
     actor User
     participant Stream as StreamingGmlParser
-    participant XMLParser as SAX/Stream Parser
+    participant XMLParser as fast-xml-parser + Chunk Logic
     participant Batch as BatchProcessor
     participant EventEmitter
 
@@ -275,21 +324,28 @@ graph LR
     Builder --> GeoJson[GeoJSON Builder]
     Builder --> Shapefile[Shapefile Builder]
     Builder --> GeoPackage[GeoPackage Builder]
+    Builder --> FlatGeobuf[FlatGeobuf Builder]
     Builder --> CSV[CSV Builder]
+    BrowserGuard[Browser Builder Resolver] --> GeoJson
+    BrowserGuard -. guard .-> Shapefile
+    BrowserGuard -. guard .-> GeoPackage
+    BrowserGuard --> FlatGeobuf
 
     style GML fill:#e1f5ff
     style Builder fill:#fff3e0
     style GeoJson fill:#e8f5e9
     style Shapefile fill:#e8f5e9
     style GeoPackage fill:#e8f5e9
+    style FlatGeobuf fill:#e8f5e9
     style CSV fill:#e8f5e9
 ```
 
 **Transformation Details:**
 - **GML Types**: `GmlGeometry`, `GmlFeature`, `GmlFeatureCollection`
 - **GeoJSON Builder**: `buildPoint()`, `buildFeature()` → GeoJSON
-- **Shapefile Builder**: `buildPoint()`, `toZip()` → Shapefile ZIP
-- **GeoPackage Builder**: `buildFeature()`, `toGeoPackage()` → .gpkg
+- **Shapefile Builder**: `buildPoint()`, `toZip()` → Shapefile ZIP, nur Node.js
+- **GeoPackage Builder**: `buildFeature()`, `toGeoPackage()` → .gpkg, nur Node.js
+- **FlatGeobuf Builder**: `buildFeature()`, `toFlatGeobuf()` → .fgb, Node.js + Browser
 - **CSV Builder**: `buildPoint()` → WKT String → CSV
 
 ## Performance-Charakteristiken
@@ -326,11 +382,12 @@ graph TD
 graph LR
     A[1. Interface implementieren] --> B[2. Builder-Klasse erstellen]
     B --> C[3. In builders/index.ts exportieren]
-    C --> D[4. In getBuilder registrieren]
-    D --> E[5. Tests schreiben]
+    C --> D[4. In Node getBuilder registrieren]
+    D --> E[5. Optional: in builders/browser.ts registrieren]
+    E --> F[6. Tests schreiben]
 
     style A fill:#e8f5e9
-    style E fill:#e8f5e9
+    style F fill:#e8f5e9
 ```
 
 **Beispiel:**
@@ -352,7 +409,9 @@ function getBuilder(format: string): Builder {
   // ...
 }
 
-// 4. Verwenden
+// 4. Optional: Browser-Resolver erweitern, falls browser-kompatibel
+
+// 5. Verwenden
 const parser = new GmlParser('custom');
 const result = await parser.parse(gml); // String-Output
 ```
@@ -368,7 +427,7 @@ const result = await parser.parse(gml); // String-Output
 | **GeoPackage** | @ngageoint/geopackage | 4.2+ | GeoPackage-Format |
 | **FlatGeobuf** | flatgeobuf | 4.3+ | Binär-Format für Cloud |
 | **CLI** | commander | 11.0+ | Command-Line Interface |
-| **Build** | Rollup | 4.9+ | ESM + CJS + CLI Bundles |
+| **Build** | Rollup | 4.9+ | ESM + Browser ESM + CJS + CLI Bundles |
 | **Tests** | Jest | 29.6+ | Unit & Integration Tests |
 | **Package Manager** | pnpm | 8.0+ | Schnelle, disk-effiziente Installs |
 
@@ -378,7 +437,9 @@ const result = await parser.parse(gml); // String-Output
 ```bash
 pnpm install @npm9912/s-gml
 ```
-- Verwendung: Node.js + Browser (ESM/CJS)
+- Verwendung: Node.js + Browser
+- Browser-Zugriff: Paket-Root mit `browser`-Condition oder explizit `@npm9912/s-gml/browser`
+- Browser-Einschränkung: Shapefile und GeoPackage bleiben Node-only
 - Bundle-Größe: ~400 KB (minified)
 
 ### 2. **CLI-Tool** (Command-Line)

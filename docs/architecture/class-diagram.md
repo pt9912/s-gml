@@ -5,9 +5,9 @@
 ```mermaid
 classDiagram
     %% Core Parser Classes
-    class GmlParser {
+    class GmlParserBase["GmlParser Base"] {
         -builder: Builder
-        +constructor(targetFormat: string | Builder)
+        +constructor(targetFormat: string | Builder, builderFactory: BuilderFactory)
         +parse(xml: string): Promise~Geometry | Feature | FeatureCollection~
         +parseFromUrl(url: string): Promise~Geometry | Feature | FeatureCollection~
         +convert(xml: string, options: GmlConvertOptions): Promise~string~
@@ -21,16 +21,32 @@ classDiagram
         -toGeoJson(gmlObject): Geometry | Feature
     }
 
+    class GmlParserNode["GmlParser (Node Entry)"] {
+        +constructor(targetFormat: string | Builder)
+    }
+
+    class GmlParserBrowser["GmlParser (Browser Entry)"] {
+        +constructor(targetFormat: string | Builder)
+    }
+
     class StreamingGmlParser {
-        -options: StreamingParserOptions
+        -gmlParser: GmlParser
         -featureCount: number
         +constructor(options?: StreamingParserOptions)
-        +parseStream(stream: ReadableStream): Promise~number~
-        +parseFile(filePath: string): Promise~number~
-        +parseFromUrl(url: string): Promise~number~
+        +parseStream(stream: ReadableStream | NodeJS.ReadableStream): Promise~void~
+        +parseFile(filePath: string): Promise~void~
+        +parseFromUrl(url: string): Promise~void~
         +getFeatureCount(): number
-        +on(event: string, callback: Function): void
-        -emit(event: string, data: any): void
+        +on(event: string, callback: Function): this
+        -emitError(error: Error): void
+    }
+
+    class BrowserBuilderResolver["Browser Builder Resolver"] {
+        +getBuilder(format: string): Builder
+    }
+
+    class NodeBuilderResolver["Node Builder Resolver"] {
+        +getBuilder(format: string): Builder
     }
 
     %% Builder Interface and Implementations
@@ -200,7 +216,11 @@ classDiagram
     }
 
     %% Relationships
-    GmlParser --> Builder : uses
+    GmlParserBase --> Builder : uses
+    GmlParserBase <|-- GmlParserNode : extends
+    GmlParserBase <|-- GmlParserBrowser : extends
+    GmlParserNode ..> NodeBuilderResolver : uses
+    GmlParserBrowser ..> BrowserBuilderResolver : uses
     StreamingGmlParser --> Builder : uses
 
     Builder <|.. GeoJsonBuilder : implements
@@ -213,18 +233,27 @@ classDiagram
     Builder <|.. CisJsonBuilder : implements
     Builder <|.. CoverageJsonBuilder : implements
 
-    GmlParser ..> WcsRequestBuilder : optional use
-    GmlParser ..> CoverageGenerator : optional use
-    GmlParser ..> PerformanceMonitor : optional use
+    GmlParserNode ..> WcsRequestBuilder : optional use
+    GmlParserNode ..> CoverageGenerator : optional use
+    GmlParserNode ..> PerformanceMonitor : optional use
+    GmlParserBrowser ..> WcsRequestBuilder : optional use
+    GmlParserBrowser ..> CoverageGenerator : optional use
+    GmlParserBrowser ..> PerformanceMonitor : optional use
     StreamingGmlParser ..> BatchProcessor : uses
     StreamingGmlParser ..> PerformanceMonitor : optional use
 
     OwsExceptionError --> OwsExceptionReport : contains
     OwsExceptionReport --> OwsException : contains multiple
 
-    GmlParser ..> OwsExceptionError : may throw
+    GmlParserBase ..> OwsExceptionError : may throw
     StreamingGmlParser ..> OwsExceptionError : may throw
 ```
+
+**Browser-spezifische Hinweise:**
+- `GmlParser (Browser Entry)` wird über `@npm9912/s-gml/browser` oder die `browser`-Condition des Paket-Roots aufgelöst.
+- `ShapefileBuilder` und `GeoPackageBuilder` sind im Browser-Build nur als Guard-Exporte verfügbar und werfen bei Nutzung einen Laufzeitfehler.
+- `FlatGeobufBuilder` bleibt im Browser-Build verfügbar.
+- `StreamingGmlParser.parseFile()` ist im Browser-Build nicht verfügbar.
 
 ## Type-Hierarchie
 
@@ -553,12 +582,14 @@ classDiagram
 
 | Klasse | Verwendet | Produziert | Wird verwendet von |
 |--------|-----------|------------|-------------------|
-| `GmlParser` | `Builder`, `XMLParser` | `Geometry`, `Feature`, `FeatureCollection` | User Code, CLI |
+| `GmlParser Base` | `Builder`, `XMLParser` | `Geometry`, `Feature`, `FeatureCollection` | Node- und Browser-Parser |
+| `GmlParser (Node Entry)` | Node Builder Resolver | `Geometry`, `Feature`, `FeatureCollection` | User Code, CLI |
+| `GmlParser (Browser Entry)` | Browser Builder Resolver | `Geometry`, `Feature`, `FeatureCollection` | Browser Bundles, Browser Provider |
 | `StreamingGmlParser` | `Builder`, `BatchProcessor` | Event-Stream | User Code (große Dateien) |
 | `GeoJsonBuilder` | - | GeoJSON Objects | `GmlParser`, `StreamingGmlParser` |
-| `ShapefileBuilder` | `@mapbox/shp-write` | Shapefile ZIP | `GmlParser`, Helper Functions |
-| `GeoPackageBuilder` | `@ngageoint/geopackage` | .gpkg Binary | `GmlParser`, Helper Functions |
-| `FlatGeobufBuilder` | `flatgeobuf` | .fgb Binary | `GmlParser`, Helper Functions |
+| `ShapefileBuilder` | `@mapbox/shp-write` | Shapefile ZIP | Node-Parser, Helper Functions, Browser Guard |
+| `GeoPackageBuilder` | `@ngageoint/geopackage` | .gpkg Binary | Node-Parser, Helper Functions, Browser Guard |
+| `FlatGeobufBuilder` | `flatgeobuf` | .fgb Binary | Node- und Browser-Parser, Helper Functions |
 | `CsvBuilder` | - | CSV String | `GmlParser` |
 | `KmlBuilder` | - | KML XML String | `GmlParser` |
 | `WktBuilder` | - | WKT Strings | `GmlParser` |
@@ -573,8 +604,8 @@ classDiagram
 
 Die Klassen-Architektur von **s-gml** folgt klaren Prinzipien:
 
-1. **Separation of Concerns**: Parser, Builder, und Utilities sind getrennt
+1. **Separation of Concerns**: Parser, Builder, Browser-Entry und Utilities sind getrennt
 2. **Open/Closed Principle**: Neue Builder können hinzugefügt werden ohne bestehenden Code zu ändern
-3. **Dependency Inversion**: Parser hängt von `Builder` Interface ab, nicht von konkreten Implementierungen
+3. **Dependency Inversion**: Parser hängt von `Builder` Interface und Builder-Resolvern ab, nicht von konkreten Implementierungen
 4. **Single Responsibility**: Jede Klasse hat eine klare, einzelne Aufgabe
 5. **Type Safety**: Vollständige TypeScript-Typisierung aller Schnittstellen

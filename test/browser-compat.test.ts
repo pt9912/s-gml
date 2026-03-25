@@ -83,6 +83,24 @@ describe('Browser Compatibility', () => {
         });
     });
 
+    describe('index.browser.ts exports', () => {
+        it('should export browser-safe parser entry points', async () => {
+            const indexExports = await import('../src/index.browser.js');
+            expect(typeof indexExports.GmlParser).toBe('function');
+            expect(typeof indexExports.StreamingGmlParser).toBe('function');
+            expect(typeof indexExports.validateGml).toBe('function');
+        });
+
+        it('should keep node-only builders behind browser guards', async () => {
+            const { ShapefileBuilder, GeoPackageBuilder, getBuilder } = await import('../src/index.browser.js');
+
+            expect(() => new ShapefileBuilder()).toThrow(/browser build/i);
+            expect(() => new GeoPackageBuilder()).toThrow(/browser build/i);
+            expect(() => getBuilder('shapefile')).toThrow(/browser/i);
+            expect(() => getBuilder('geopackage')).toThrow(/browser/i);
+        });
+    });
+
     describe('Built distribution', () => {
         it('dist/index.js should not contain direct Node.js module imports', () => {
             const distPath = join(__dirname, '../dist/index.js');
@@ -122,6 +140,16 @@ describe('Browser Compatibility', () => {
             // CLI should have native xmllint support
             expect(content).toContain('validateWithNativeXmllint');
             expect(content).toContain('which xmllint');
+        });
+
+        it('dist/index.browser.js should not import Node.js stream shims', () => {
+            const distPath = join(__dirname, '../dist/index.browser.js');
+            const content = readFileSync(distPath, 'utf-8');
+
+            expect(content).not.toContain(`from 'stream'`);
+            expect(content).not.toContain(`from "stream"`);
+            expect(content).not.toContain(`from 'node:stream'`);
+            expect(content).not.toContain(`from "node:stream"`);
         });
     });
 });

@@ -39,6 +39,19 @@ inkl. **Envelope, Box, Curve, Surface, LinearRing**, WFS-/WCS-Unterstützung und
 pnpm install @npm9912/s-gml
 ```
 
+### Browser / Bundler
+
+Für Browser-Builds mit statischen Imports kannst du entweder den Paket-Root verwenden, wenn dein Bundler die `browser`-Condition auswertet, oder den Browser-Entry explizit importieren:
+
+```typescript
+import { GmlParser, StreamingGmlParser } from '@npm9912/s-gml/browser';
+```
+
+Hinweise:
+- `ShapefileBuilder` und `GeoPackageBuilder` sind im Browser-Build nicht verfügbar
+- `FlatGeobufBuilder` bleibt im Browser-Build verfügbar
+- In Browser-Providern vermeidet der explizite Browser-Entry das Einziehen von `stream`
+
 ---
 ## 🚀 Usage
 

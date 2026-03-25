@@ -1,0 +1,75 @@
+export * from './types.js';
+export { GmlParser } from './parser.browser.js';
+export {
+    StreamingGmlParser,
+    parseGmlStream,
+    type StreamingParserOptions,
+    type FeatureCallback,
+} from './streaming-parser.browser.js';
+export {
+    PerformanceMonitor,
+    BatchProcessor,
+    processBatch,
+    clearPerformanceCaches,
+    getCacheStats,
+    internString,
+    parseCoordinatesOptimized,
+    releaseCoordinates,
+    type PerformanceReport,
+} from './performance.js';
+export { validateGml } from './validator.browser.js';
+export {
+    getBuilder,
+    GeoJsonBuilder,
+    ShapefileBuilder,
+    toShapefile,
+    GeoPackageBuilder,
+    toGeoPackage,
+    FlatGeobufBuilder,
+    toFlatGeobuf,
+    CisJsonBuilder,
+    CoverageJsonBuilder,
+    CsvBuilder,
+    KmlBuilder,
+    WktBuilder,
+    wktCollectionToJson,
+    wktCollectionToCsv,
+    type ShapefileOptions,
+    type GeoPackageOptions,
+    type CsvRow,
+    type CsvOutput,
+    type WktFeature,
+    type WktCollection,
+} from './builders/browser.js';
+export {
+    OwsException,
+    OwsExceptionReport,
+    OwsExceptionError,
+    isOwsExceptionReport,
+    parseOwsExceptionReport,
+} from './ows-exception.js';
+export {
+    GeoTiffMetadata,
+    extractGeoTiffMetadata,
+    pixelToWorld,
+    worldToPixel,
+} from './utils/geotiff-metadata.js';
+export { CoverageGenerator, generateCoverageXml } from './generators/coverage-generator.js';
+export {
+    WcsVersion,
+    WcsSubset,
+    WcsScaling,
+    WcsGetCoverageOptions,
+    WcsRequestBuilder,
+    buildWcsGetCoverageUrl,
+    buildWcsGetCoverageXml,
+} from './wcs/request-builder.js';
+export {
+    WcsServiceIdentification,
+    WcsServiceProvider,
+    WcsOperationMetadata,
+    WcsCoverageSummary,
+    WcsCapabilities,
+    WcsCapabilitiesParser,
+    parseWcsCapabilities,
+} from './wcs/capabilities-parser.js';
