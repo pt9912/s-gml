@@ -4,7 +4,7 @@
 
 ## Overview
 
-This patch release fixes static browser imports for `@npm9912/s-gml`. Browser providers and bundlers no longer pull in `stream` through the package's browser-facing entry, while Node.js consumers keep the existing API.
+This patch release combines the browser-safe package entry introduced earlier with a series of security, correctness, and type-safety fixes identified during a comprehensive code review.
 
 ---
 
@@ -20,122 +20,97 @@ This patch release fixes static browser imports for `@npm9912/s-gml`. Browser pr
 import { GmlParser, StreamingGmlParser } from '@npm9912/s-gml/browser';
 ```
 
-### Static import fix for browser providers
-
 - Removed the browser bundle path that previously pulled in `stream`
-- Split parser wiring into shared logic plus Node/browser-specific wrappers
-- Added browser-safe builder resolution for static imports
+- Added explicit runtime errors for `ShapefileBuilder`, `GeoPackageBuilder`, `toShapefile()`, and `toGeoPackage()` in browser contexts
 
-### Clear runtime guards for Node-only exports
+### Security: command injection fix in XML validator
 
-The browser build now fails fast with clear errors for Node-only exports instead of leaking Node internals into the bundle:
+`exec()` was replaced with `execFile()` for all `xmllint` invocations. Arguments are now passed as an array directly to the process, eliminating the shell as an intermediary and removing any possibility of argument injection through file path characters.
 
-- `ShapefileBuilder`
-- `GeoPackageBuilder`
-- `toShapefile()`
-- `toGeoPackage()`
+Additionally, the GML XSD schema URLs were upgraded from `http://` to `https://` to prevent MITM-based schema substitution during validation.
 
-`FlatGeobufBuilder` remains available in browser builds.
+### Streaming parser: true incremental processing
 
----
+`parseNodeStream()` previously accumulated all chunks into an in-memory array and only began processing after the `end` event — fully defeating the memory advantage of streaming. The implementation now processes each chunk as it arrives using `pause()`/`resume()` backpressure, matching the existing `parseWebStream()` behaviour.
 
-## Detailed Changes
+### Streaming parser: improved buffer overflow recovery
 
-### Added
+After a buffer overflow the parser now enters a recovery mode that scans incoming chunks for the next feature start tag (`<gml:featureMember>` or `<wfs:member>`) before resuming normal parsing. Previously the entire buffer was discarded and subsequent chunks were appended to an empty string, producing corrupt XML for the remainder of the stream.
 
-- Browser-specific package entry point
-- Dedicated browser Rollup build
-- Explicit `@npm9912/s-gml/browser` import path
-- Browser compatibility tests for the new entry
+### GML Box coordinate parsing fix
 
-### Changed
+`parseBox()` now correctly handles both `<gml:coordinates>` formats used in GML 2.1.2:
 
-- Shared parser logic moved into a common base implementation
-- Node and browser parser wrappers now select the appropriate builder resolver
-- README updated with browser and bundler guidance
+| Format | Example | Previously |
+|--------|---------|------------|
+| Comma-separated tuples | `"10,20 30,40"` | `Number("10,20")` → `NaN` (silent) |
+| Flat space-separated | `"0 0 10 10"` | Worked correctly |
 
-### Fixed
+Both formats are now validated with an explicit `isNaN` check.
 
-- Static imports of `@npm9912/s-gml` in browser providers no longer drag in `stream`
-- Browser distribution is now free of `stream`, `fs`, `path`, `http`, and `os` imports
+### Coverage type safety
 
----
+Four `as any` casts were removed from `parseElement()`. `GmlCoverage` is now part of the return type union of `parseGml()` and `parseElement()`, so the TypeScript compiler can verify coverage handling end-to-end. `convert()` throws an explicit, descriptive error when called with a coverage object rather than silently passing it to `generateGml()`.
 
-## Migration Guide
+### WcsVersion type unified
 
-No migration is required for Node.js consumers.
+`WcsVersion` is now defined once in `wcs/request-builder.ts` and re-exported by `wcs/capabilities-parser.ts`. The two files previously maintained independent, non-identical definitions — the capabilities parser supported `'1.1.1'` and `'1.1.2'` while the request builder did not, making it impossible to pass the parser's output directly to the builder. Both versions are now included in the canonical type.
 
-For browser-only consumers, prefer one of these approaches:
+### ESLint underscore-prefix convention
 
-### Option 1: Use the package root
-
-Use `@npm9912/s-gml` if your bundler respects the `browser` export condition.
-
-### Option 2: Use the explicit browser entry
-
-Use `@npm9912/s-gml/browser` if you want an unambiguous browser-specific import path.
-
-```typescript
-import { GmlParser } from '@npm9912/s-gml/browser';
-```
-
-### Browser limitations
-
-- Shapefile export remains Node-only
-- GeoPackage export remains Node-only
-- FlatGeobuf export remains browser-compatible
+Added `argsIgnorePattern: '^_'` and `varsIgnorePattern: '^_'` to the `no-unused-vars` rule so intentionally-unused parameters (e.g. `_options` in browser stub functions) are not flagged as errors.
 
 ---
 
-## Verification
+## Security
 
-This release was verified with:
+| Finding | Severity | Fix |
+|---------|----------|-----|
+| `exec()` shell injection in xmllint validator | High | Replaced with `execFile()` |
+| XSD schemas fetched over HTTP | Medium | Upgraded to HTTPS |
 
-- `pnpm run build`
-- `pnpm test -- --runInBand test/browser-compat.test.ts`
-- `pnpm test -- --runInBand test/parser.test.ts`
-- `pnpm test -- --runInBand test/streaming-parser.test.ts`
+---
+
+## Bug Fixes
+
+- `parseBox()` no longer produces silent `NaN` coordinates for GML 2.1.2 comma-separated coordinate format
+- `parseNodeStream()` no longer buffers the entire response before processing
+- Buffer overflow recovery no longer corrupts subsequent stream data
+- `convert()` no longer passes coverage objects to `generateGml()` silently
+
+---
+
+## Type System Improvements
+
+- `GmlCoverage` added to `parseGml()` / `parseElement()` return type union
+- `WcsVersion` unified — `'1.1.1'` and `'1.1.2'` added to the canonical type
+- `on()` implementation overload typed without `any`
+- `isNodeStream()` typed without `any`
+- ESLint now correctly permits `_`-prefixed intentionally-unused parameters
 
 ---
 
 ## Installation
 
-### npm
-
 ```bash
 npm install @npm9912/s-gml@1.7.1
-```
-
-### pnpm
-
-```bash
+# oder
 pnpm add @npm9912/s-gml@1.7.1
-```
-
-### yarn
-
-```bash
-yarn add @npm9912/s-gml@1.7.1
-```
-
-### Docker
-
-```bash
+# oder
 docker pull ghcr.io/pt9912/s-gml:1.7.1
-docker pull ghcr.io/pt9912/s-gml:latest
 ```
 
 ---
 
-## Resources
+## Test Statistics
 
-- **Documentation:** See README.md for updated browser usage guidance
-- **Repository:** [github.com/pt9912/s-gml](https://github.com/pt9912/s-gml)
-- **GitHub Release:** [v1.7.1](https://github.com/pt9912/s-gml/releases/tag/v1.7.1)
-- **Issues:** Report bugs at [GitHub Issues](https://github.com/pt9912/s-gml/issues)
-- **NPM:** [@npm9912/s-gml](https://www.npmjs.com/package/@npm9912/s-gml)
-- **Docker:** [ghcr.io/pt9912/s-gml](https://github.com/pt9912/s-gml/pkgs/container/s-gml)
+- **529 Tests** — alle bestanden
+- **29 Test Suites**
 
 ---
 
-**Full Changelog:** [v1.7.0...v1.7.1](https://github.com/pt9912/s-gml/compare/v1.7.0...v1.7.1)
+## Upgrade Notes
+
+No breaking changes. All existing APIs remain compatible.
+
+The `WcsVersion` type now includes `'1.1.1'` and `'1.1.2'` — code that exhaustively switches over this type may need a `default` branch added if the compiler warns about unhandled cases.

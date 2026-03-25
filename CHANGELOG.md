@@ -18,8 +18,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Split parser wiring into shared base logic plus Node/browser-specific wrappers
   - Added browser-safe builder resolver for static imports in browser providers
   - Browser build now keeps `FlatGeobufBuilder` available while guarding Node-only builders
+- **WCS version type unified**
+  - `WcsVersion` is now defined once in `wcs/request-builder.ts` and re-exported by `capabilities-parser.ts`
+  - Added missing `'1.1.1'` and `'1.1.2'` version literals so capabilities parser output can be passed directly to the request builder
 
 ### Fixed
+- **Security: command injection in XML validator**
+  - Replaced `exec()` with `execFile()` for all `xmllint` invocations — arguments are now passed as an array, eliminating the shell as an attack surface
+  - Upgraded GML XSD schema URLs from HTTP to HTTPS to prevent MITM schema substitution
+- **Streaming parser: Node.js stream memory consumption**
+  - `parseNodeStream()` previously buffered all chunks before processing, negating the memory advantage of streaming; chunks are now processed incrementally with `pause()`/`resume()` backpressure
+- **Streaming parser: buffer overflow recovery**
+  - After a buffer overflow the parser now enters a recovery mode, scanning for the next feature start tag before resuming; previously the entire buffer was discarded causing subsequent chunks to be appended to corrupt state
+- **GML Box coordinate parsing**
+  - `parseBox()` now handles both GML 2.1.2 coordinate formats: comma-separated tuples (`"x1,y1 x2,y2"`) and flat space-separated values (`"x1 y1 x2 y2"`); `Number("10,20")` previously silently produced `NaN`
+- **Coverage type safety**
+  - Removed four `as any` casts from coverage return sites in `parseElement()`; `GmlCoverage` is now part of the return type union of `parseGml()` and `parseElement()`
+  - `convert()` now throws an explicit error when called with a coverage object instead of silently passing it to `generateGml()`
+- **ESLint configuration**
+  - Added `argsIgnorePattern: '^_'` and `varsIgnorePattern: '^_'` so underscore-prefixed intentionally-unused parameters are not flagged as errors
 - **Static browser imports**
   - Prevented browser bundles from pulling in `stream` through static `@npm9912/s-gml` imports
   - Added explicit runtime errors for `ShapefileBuilder`, `GeoPackageBuilder`, `toShapefile()`, and `toGeoPackage()` in browser builds
