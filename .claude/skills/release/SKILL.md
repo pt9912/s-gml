@@ -92,7 +92,7 @@ Released: <DATUM>
 ```bash
 npm install @npm9912/s-gml@<VERSION>
 # oder
-docker pull ghcr.io/pt9912/s-gml:<VERSION>
+docker pull ghcr.io/pt9912/s-gml:v<VERSION>
 ```
 
 ## Test-Statistiken
